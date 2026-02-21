@@ -532,11 +532,74 @@ label {
     }
 }
 
+@media (max-width: 1024px) {
+    .form-panel {
+        width: 400px;
+        min-width: 400px;
+    }
+}
+
 @media (max-width: 900px) {
+
+    html,
+    body {
+        height: auto !important;
+        overflow: auto !important;
+        overflow-x: hidden !important;
+    }
+
     .app-layout {
         flex-direction: column;
-        overflow-y: auto;
-        height: auto;
+        height: auto !important;
+        padding: 10px;
+        gap: 10px;
+        overflow: visible !important;
+    }
+
+    .window {
+        flex: none !important;
+        height: auto !important;
+        overflow: visible !important;
+    }
+
+    .window-body {
+        overflow: visible !important;
+        flex: none !important;
+    }
+
+    .form-panel {
+        width: 100%;
+        min-width: 0;
+    }
+
+    .inset-panel {
+        overflow: visible !important;
+    }
+
+    .preview-panel {
+        min-height: 600px;
+    }
+
+    .cv-page {
+        transform: scale(0.6);
+        transform-origin: top center;
+    }
+}
+
+@media (max-width: 600px) {
+    .app-layout {
+        padding: 0;
+        gap: 0;
+    }
+
+    .window {
+        border: none;
+        box-shadow: none;
+    }
+
+    .title-bar {
+        margin: 0;
+        border-radius: 0;
     }
 
     .form-panel {
@@ -545,6 +608,42 @@ label {
     }
 
     .preview-panel {
-        height: 800px;
+        min-height: 500px;
+    }
+
+    .cv-page {
+        transform: scale(0.45);
+        transform-origin: top center;
+    }
+
+    .group-box {
+        margin-top: 16px;
+        margin-bottom: 16px;
+        padding: 20px 10px 10px 10px;
+    }
+
+    .field-row {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .field-col {
+        min-width: 0;
+    }
+
+    .btn {
+        min-height: 32px;
+        font-size: 13px;
+        padding: 6px 14px;
+    }
+
+    .input-field {
+        font-size: 14px;
+        padding: 6px;
+    }
+
+    .toolbar {
+        flex-wrap: wrap;
+        gap: 6px;
     }
 }
