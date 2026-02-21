@@ -4,6 +4,8 @@ Windows 95 temalı, tarayıcı tabanlı CV oluşturucu. Bilgilerinizi girin, can
 
 ![Screenshot](https://img.shields.io/badge/theme-Windows%2095-blue)
 
+<img width="1894" height="1016" alt="Adsız" src="https://github.com/user-attachments/assets/c873de88-2aa7-4aa8-b1dd-8a37dd79d596" />
+
 ## Bölümler
 
 | Bölüm | Açıklama |
@@ -31,6 +33,10 @@ Tarayıcıda `http://localhost:5173` adresini açın.
 - **JavaScript**
 - **anime.js** 
 - **CSS**
+
+## Test
+
+Bu proje öncelikli olarak **Zen Browser** üzerinde test edilmiştir.
 
 ## Lisans
 
