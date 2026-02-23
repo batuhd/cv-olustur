@@ -573,6 +573,41 @@ label {
     box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.5);
 }
 
+.github-floating-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--surface);
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 13px;
+    border-top: 2px solid var(--surface-light);
+    border-left: 2px solid var(--surface-light);
+    border-right: 2px solid var(--surface-darker);
+    border-bottom: 2px solid var(--surface-darker);
+    box-shadow: inset -1px -1px 0 var(--surface-dark), inset 1px 1px 0 var(--surface-lighter), 2px 2px 5px rgba(0,0,0,0.3);
+    z-index: 1000;
+    transition: transform 0.1s;
+}
+
+.github-floating-btn:active {
+    border-top: 2px solid var(--surface-darker);
+    border-left: 2px solid var(--surface-darker);
+    border-right: 2px solid var(--surface-light);
+    border-bottom: 2px solid var(--surface-light);
+    box-shadow: inset 1px 1px 0 var(--surface-dark), inset -1px -1px 0 var(--surface);
+    padding: 9px 11px 7px 13px;
+}
+
+.github-floating-btn:hover {
+    background: var(--surface-light);
+}
+
 @page {
     size: A4;
     margin: 15mm 18mm;
