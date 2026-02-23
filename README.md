@@ -2,19 +2,9 @@
 
 Windows 95 temalı, tarayıcı tabanlı CV oluşturucu. Bilgilerinizi girin, canlı önizleme ile kontrol edin ve PDF olarak indirin.
 
-<table width="100%" style="border-collapse: collapse; border: none;">
-  <tr>
-    <td align="left" style="border: none;">
-      <img alt="Adsız" src="https://img.shields.io/badge/theme-Windows%2095-blue" />
-    </td>
-    <td align="right" style="border: none;">
-      <img alt="Adsız" src="./img/firefox4.gif" />
-      <img alt="Adsız" src="./img/notepad2.gif" />
-      <img alt="Adsız" src="./img/win95.gif" />
-      <img alt="Adsız" src="./img/1080p.gif" />
-    </td>
-  </tr>
-</table>
+<div align="left">
+    <img alt="Adsız" src="https://img.shields.io/badge/theme-Windows%2095-blue" />
+</div>
 
 <img width="1894" height="1016" alt="Adsız" src="./img/Adsız.png"/>
 
