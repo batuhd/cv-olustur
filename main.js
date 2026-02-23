@@ -4,7 +4,10 @@ const defaultData = {
   fullName: 'Ahmet Yılmaz',
   phone: '+90 555 123 45 67',
   email: 'ahmet@example.com',
-  linkedin: 'linkedin.com/in/ahmetyilmaz',
+  links: [
+    { name: 'LinkedIn', url: 'linkedin.com/in/ahmetyilmaz' },
+    { name: 'GitHub', url: 'github.com/ahmetyilmaz' }
+  ],
   education: [
     { school: 'Örnek Üniversitesi', degree: 'Lisans, Bilgisayar Mühendisliği', date: 'Eylül 2021 - Haziran 2025' }
   ],
@@ -69,7 +72,9 @@ function loadDefaults() {
   document.getElementById('fullName').value = defaultData.fullName;
   document.getElementById('phone').value = defaultData.phone;
   document.getElementById('email').value = defaultData.email;
-  document.getElementById('linkedin').value = defaultData.linkedin;
+  
+  defaultData.links.forEach(l => addSocialLinkItem(l.name, l.url));
+
   document.getElementById('references').value = defaultData.references;
 
   defaultData.education.forEach(ed => addEducationItem(document.getElementById('educationList'), ed));
@@ -116,6 +121,22 @@ function makeField(id, labelText, value, colspan) {
       <input type="text" class="${id} input-field" value="${esc(value)}" />
     </div>
   `;
+}
+
+function addSocialLinkItem(name = '', url = '') {
+  const container = document.getElementById('socialLinksList');
+  const div = document.createElement('div');
+  div.className = 'dynamic-link-row';
+  div.innerHTML = `
+    <input type="text" class="input-field link-name" value="${esc(name)}" placeholder="Örn: LinkedIn" style="width: 30%;" />
+    <input type="text" class="input-field link-url" value="${esc(url)}" placeholder="Bağlantı URL'si" style="flex:1;" />
+    <button type="button" class="btn-remove-bullet">X</button>
+  `;
+  container.appendChild(div);
+  
+  const inputs = div.querySelectorAll('input');
+  inputs.forEach(inp => inp.addEventListener('input', updatePreview));
+  div.querySelector('.btn-remove-bullet').addEventListener('click', () => { div.remove(); updatePreview(); });
 }
 
 function addEducationItem(container, data = {}) {
@@ -203,6 +224,73 @@ function addLanguageItem(container, data = {}) {
   animateNewItem(el);
 }
 
+function addCustomItem(container, data = {}) {
+  const el = createDynamicItem();
+  el.insertAdjacentHTML('beforeend', `
+    <div class="field-row">
+      ${makeField('cust-title', 'Başlık', data.title, 2)}
+      ${makeField('cust-subtitle', 'Alt Başlık (Opsiyonel)', data.subtitle, 1)}
+      ${makeField('cust-date', 'Tarih (Opsiyonel)', data.date, 1)}
+    </div>
+    <div style="margin-top:0.5rem;">
+      <label style="display:block;margin-bottom:2px;font-weight:500;">Açıklamalar</label>
+      <div class="bullet-list"></div>
+      <button type="button" class="btn-add-bullet">+ Madde Ekle</button>
+    </div>
+  `);
+  container.appendChild(el);
+  const bulletList = el.querySelector('.bullet-list');
+  (data.bullets || []).forEach(b => addBulletInput(bulletList, b));
+  el.querySelector('.btn-add-bullet').addEventListener('click', () => addBulletInput(el.querySelector('.bullet-list'), ''));
+  bindItem(el);
+  animateNewItem(el);
+}
+
+function addNewSectionOfType(type) {
+  const container = document.getElementById('sectionsContainer');
+  const sectionId = 'dynList_' + Date.now();
+  const el = document.createElement('div');
+  el.className = 'group-box section-block';
+  el.setAttribute('data-type', type);
+  
+  let btnLabel = '';
+  let addAction = '';
+  let contentHtml = '';
+
+  if (type === 'custom') {
+    btnLabel = 'Eleman Ekle';
+    addAction = 'addCustomItem';
+    contentHtml = `<div id="${sectionId}" class="items-list"></div><button type="button" class="btn btn-add-item" data-action="${addAction}">${btnLabel}</button>`;
+  } else if (type === 'skill') {
+    btnLabel = 'Beceri Ekle';
+    addAction = 'addSkill';
+    contentHtml = `<div id="${sectionId}" class="items-list"></div><button type="button" class="btn btn-add-item" data-action="${addAction}">${btnLabel}</button>`;
+  } else if (type === 'language') {
+    btnLabel = 'Dil Ekle';
+    addAction = 'addLanguage';
+    contentHtml = `<div id="${sectionId}" class="items-list"></div><button type="button" class="btn btn-add-item" data-action="${addAction}">${btnLabel}</button>`;
+  } else if (type === 'text') {
+    contentHtml = `<div class="field-row"><div class="field-col full"><textarea class="input-field dyn-textarea" rows="3" placeholder="Açıklamanızı buraya yazın..."></textarea></div></div>`;
+  }
+
+  el.innerHTML = `
+    <div class="section-header">
+        <input type="text" class="section-title-input" value="Yeni Kategori" />
+        <div class="section-controls">
+            <button type="button" class="btn-icon btn-up" aria-label="Yukarı taşı">↑</button>
+            <button type="button" class="btn-icon btn-down" aria-label="Aşağı taşı">↓</button>
+            <button type="button" class="btn-icon btn-delete" aria-label="Kategoriyi sil">✕</button>
+        </div>
+    </div>
+    <div class="section-content">
+        ${contentHtml}
+    </div>
+  `;
+  container.appendChild(el);
+  
+  animate(el, { translateY: [15, 0], opacity: [0, 1], duration: 400, ease: 'outCubic' });
+}
+
 function addBulletInput(bulletList, value = '') {
   const div = document.createElement('div');
   div.className = 'bullet-row';
@@ -228,22 +316,86 @@ function bindItem(el) {
 }
 
 function setupListeners() {
-  ['fullName', 'phone', 'email', 'linkedin', 'references'].forEach(id =>
-    document.getElementById(id).addEventListener('input', updatePreview));
+  ['fullName', 'phone', 'email', 'references'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.addEventListener('input', updatePreview);
+  });
 
-  document.getElementById('addEducation').addEventListener('click', () => { addEducationItem(document.getElementById('educationList')); updatePreview(); });
-  document.getElementById('addExperience').addEventListener('click', () => { addExperienceItem(document.getElementById('experienceList')); updatePreview(); });
-  document.getElementById('addActivity').addEventListener('click', () => { addActivityItem(document.getElementById('activityList')); updatePreview(); });
-  document.getElementById('addSkill').addEventListener('click', () => { addSkillItem(document.getElementById('skillsList')); updatePreview(); });
-  document.getElementById('addLanguage').addEventListener('click', () => { addLanguageItem(document.getElementById('languagesList')); updatePreview(); });
+  document.getElementById('addSocialLink').addEventListener('click', () => { addSocialLinkItem(); updatePreview(); });
+
+  // Event delegation for dynamically added add buttons
+  document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('btn-add-item')) {
+      const action = e.target.getAttribute('data-action');
+      const listContainer = e.target.previousElementSibling;
+      if (action === 'addEducation') addEducationItem(listContainer);
+      else if (action === 'addExperience') addExperienceItem(listContainer);
+      else if (action === 'addActivity') addActivityItem(listContainer);
+      else if (action === 'addSkill') addSkillItem(listContainer);
+      else if (action === 'addLanguage') addLanguageItem(listContainer);
+      else if (action === 'addCustomItem') addCustomItem(listContainer);
+      updatePreview();
+    }
+  });
+
+  // Section controls listener
+  document.getElementById('sectionsContainer').addEventListener('click', (e) => {
+    if (e.target.classList.contains('btn-up')) {
+      const section = e.target.closest('.section-block');
+      if (section.previousElementSibling) {
+        section.parentNode.insertBefore(section, section.previousElementSibling);
+        updatePreview();
+        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    } else if (e.target.classList.contains('btn-down')) {
+      const section = e.target.closest('.section-block');
+      if (section.nextElementSibling) {
+        section.parentNode.insertBefore(section.nextElementSibling, section);
+        updatePreview();
+        section.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    } else if (e.target.classList.contains('btn-delete')) {
+      if (confirm('Bu kategoriyi silmek istediğinize emin misiniz?')) {
+        e.target.closest('.section-block').remove();
+        updatePreview();
+      }
+    }
+  });
+
+  document.getElementById('sectionsContainer').addEventListener('input', (e) => {
+    if (e.target.classList.contains('section-title-input')) {
+      updatePreview();
+    }
+  });
+
+  document.getElementById('addCustomSection').addEventListener('click', () => { 
+    document.getElementById('newCategoryModal').showModal();
+  });
+
+  document.getElementById('closeCategoryModal').addEventListener('click', () => {
+    document.getElementById('newCategoryModal').close();
+  });
+
+  document.getElementById('confirmAddCategory').addEventListener('click', () => {
+    const type = document.getElementById('newCategoryType').value;
+    addNewSectionOfType(type);
+    document.getElementById('newCategoryModal').close();
+    updatePreview();
+  });
+
   document.getElementById('downloadPdf').addEventListener('click', downloadPdf);
   document.getElementById('clearForm').addEventListener('click', clearForm);
 }
 
 function clearForm() {
   if (!confirm('Tüm bilgileri silmek istediğinize emin misiniz?')) return;
-  ['fullName', 'phone', 'email', 'linkedin', 'references'].forEach(id => { document.getElementById(id).value = ''; });
-  ['educationList', 'experienceList', 'activityList', 'skillsList', 'languagesList'].forEach(id => { document.getElementById(id).innerHTML = ''; });
+  ['fullName', 'phone', 'email', 'references'].forEach(id => { 
+      const el = document.getElementById(id);
+      if(el) el.value = ''; 
+  });
+  document.getElementById('socialLinksList').innerHTML = '';
+  document.querySelectorAll('.items-list').forEach(list => { list.innerHTML = ''; });
+  document.querySelectorAll('.dyn-textarea').forEach(ta => { ta.value = ''; });
   updatePreview();
 }
 
@@ -259,83 +411,127 @@ function applyZoom() {
 
 function updatePreview() {
   document.getElementById('cvName').textContent = document.getElementById('fullName').value || 'Ad Soyad';
-  document.getElementById('cvPhone').textContent = document.getElementById('phone').value;
-  document.getElementById('cvEmail').textContent = document.getElementById('email').value;
-  document.getElementById('cvLinkedin').textContent = document.getElementById('linkedin').value;
+  
+  // Contact update
+  const phone = document.getElementById('phone').value;
+  const email = document.getElementById('email').value;
+  const links = Array.from(document.querySelectorAll('.dynamic-link-row')).map(row => {
+    return {
+      name: row.querySelector('.link-name').value.trim(),
+      url: row.querySelector('.link-url').value.trim()
+    };
+  }).filter(l => l.name || l.url);
 
-  document.getElementById('cvEducation').innerHTML = Array.from(
-    document.querySelectorAll('#educationList > div')
-  ).map(item => {
-    const school = item.querySelector('.ed-school')?.value || '';
-    const degree = item.querySelector('.ed-degree')?.value || '';
-    const date = item.querySelector('.ed-date')?.value || '';
-    if (!school && !degree) return '';
-    return `<div class="cv-entry">
-      <div class="cv-entry-row">
-        <span class="cv-entry-title">${esc(school)}</span>
-        <span class="cv-entry-date">${esc(date)}</span>
-      </div>
-      ${degree ? `<div class="cv-entry-subtitle">${esc(degree)}</div>` : ''}
-    </div>`;
-  }).join('');
+  const contactItems = [];
+  if (phone) contactItems.push(`<span>${esc(phone)}</span>`);
+  if (email) contactItems.push(`<span>${esc(email)}</span>`);
+  links.forEach(l => {
+    if (l.url) contactItems.push(`<span>${esc(l.url)}</span>`);
+  });
 
-  document.getElementById('cvExperience').innerHTML = Array.from(
-    document.querySelectorAll('#experienceList > div')
-  ).map(item => {
-    const title = item.querySelector('.exp-title')?.value || '';
-    const company = item.querySelector('.exp-company')?.value || '';
-    const location = item.querySelector('.exp-location')?.value || '';
-    const date = item.querySelector('.exp-date')?.value || '';
-    const bullets = Array.from(item.querySelectorAll('.bullet-list input')).map(inp => inp.value).filter(v => v.trim());
-    if (!title && !company) return '';
-    const subtitle = [company, location].filter(Boolean).join('   ');
-    return `<div class="cv-entry">
-      <div class="cv-entry-row">
-        <span class="cv-entry-title">${esc(title)}</span>
-        <span class="cv-entry-date">${esc(date)}</span>
-      </div>
-      ${subtitle ? `<div class="cv-entry-subtitle">${esc(subtitle)}</div>` : ''}
-      ${bullets.length ? `<ul class="cv-entry-bullets">${bullets.map(b => `<li>${esc(b)}</li>`).join('')}</ul>` : ''}
-    </div>`;
-  }).join('');
+  document.getElementById('cvContact').innerHTML = contactItems.join('<span class="cv-sep">|</span>');
 
-  document.getElementById('cvActivities').innerHTML = Array.from(
-    document.querySelectorAll('#activityList > div')
-  ).map(item => {
-    const name = item.querySelector('.act-name')?.value || '';
-    const role = item.querySelector('.act-role')?.value || '';
-    const org = item.querySelector('.act-org')?.value || '';
-    const bullets = Array.from(item.querySelectorAll('.bullet-list input')).map(inp => inp.value).filter(v => v.trim());
-    if (!name) return '';
-    return `<div class="cv-activity">
-      <div class="cv-activity-row">
-        <span class="cv-activity-name">${esc(name)}</span>
-        <span class="cv-activity-role">${esc(role)}</span>
-      </div>
-      ${org ? `<div class="cv-activity-org">${esc(org)}</div>` : ''}
-      ${bullets.length ? `<ul class="cv-activity-bullets">${bullets.map(b => `<li>${esc(b)}</li>`).join('')}</ul>` : ''}
-    </div>`;
-  }).join('');
+  // Dynamic Sections Logic
+  const sectionsArea = document.getElementById('cvSectionsArea');
+  sectionsArea.innerHTML = '';
 
-  document.getElementById('cvSkills').innerHTML = Array.from(
-    document.querySelectorAll('#skillsList > div')
-  ).map(item => {
-    const cat = item.querySelector('.skill-cat')?.value || '';
-    const val = item.querySelector('.skill-val')?.value || '';
-    if (!cat && !val) return '';
-    return `<div class="cv-skill-row"><span class="cv-skill-cat">${esc(cat)}</span> : ${esc(val)}</div>`;
-  }).join('');
+  const sectionBlocks = document.querySelectorAll('.section-block');
+  
+  sectionBlocks.forEach(block => {
+    const title = block.querySelector('.section-title-input').value.trim();
+    if (!title) return;
+    const type = block.getAttribute('data-type');
+    let itemsHtml = '';
+    
+    if (type === 'education') {
+      itemsHtml = Array.from(block.querySelectorAll('.items-list > div')).map(item => {
+        const school = item.querySelector('.ed-school')?.value || '';
+        const degree = item.querySelector('.ed-degree')?.value || '';
+        const date = item.querySelector('.ed-date')?.value || '';
+        if (!school && !degree) return '';
+        return `<div class="cv-entry">
+          <div class="cv-entry-row"><span class="cv-entry-title">${esc(school)}</span><span class="cv-entry-date">${esc(date)}</span></div>
+          ${degree ? `<div class="cv-entry-subtitle">${esc(degree)}</div>` : ''}
+        </div>`;
+      }).join('');
+    } else if (type === 'experience') {
+      itemsHtml = Array.from(block.querySelectorAll('.items-list > div')).map(item => {
+        const titleVal = item.querySelector('.exp-title')?.value || '';
+        const company = item.querySelector('.exp-company')?.value || '';
+        const location = item.querySelector('.exp-location')?.value || '';
+        const date = item.querySelector('.exp-date')?.value || '';
+        const bullets = Array.from(item.querySelectorAll('.bullet-list input')).map(inp => inp.value).filter(v => v.trim());
+        if (!titleVal && !company) return '';
+        const subtitle = [company, location].filter(Boolean).join('   ');
+        return `<div class="cv-entry">
+          <div class="cv-entry-row"><span class="cv-entry-title">${esc(titleVal)}</span><span class="cv-entry-date">${esc(date)}</span></div>
+          ${subtitle ? `<div class="cv-entry-subtitle">${esc(subtitle)}</div>` : ''}
+          ${bullets.length ? `<ul class="cv-entry-bullets">${bullets.map(b => `<li>${esc(b)}</li>`).join('')}</ul>` : ''}
+        </div>`;
+      }).join('');
+    } else if (type === 'activity') {
+      itemsHtml = Array.from(block.querySelectorAll('.items-list > div')).map(item => {
+        const name = item.querySelector('.act-name')?.value || '';
+        const role = item.querySelector('.act-role')?.value || '';
+        const org = item.querySelector('.act-org')?.value || '';
+        const bullets = Array.from(item.querySelectorAll('.bullet-list input')).map(inp => inp.value).filter(v => v.trim());
+        if (!name) return '';
+        return `<div class="cv-activity">
+          <div class="cv-activity-row"><span class="cv-activity-name">${esc(name)}</span><span class="cv-activity-role">${esc(role)}</span></div>
+          ${org ? `<div class="cv-activity-org">${esc(org)}</div>` : ''}
+          ${bullets.length ? `<ul class="cv-activity-bullets">${bullets.map(b => `<li>${esc(b)}</li>`).join('')}</ul>` : ''}
+        </div>`;
+      }).join('');
+    } else if (type === 'skill') {
+      itemsHtml = Array.from(block.querySelectorAll('.items-list > div')).map(item => {
+        const cat = item.querySelector('.skill-cat')?.value || '';
+        const val = item.querySelector('.skill-val')?.value || '';
+        if (!cat && !val) return '';
+        return `<div class="cv-skill-row"><span class="cv-skill-cat">${esc(cat)}</span> : ${esc(val)}</div>`;
+      }).join('');
+    } else if (type === 'language') {
+      itemsHtml = Array.from(block.querySelectorAll('.items-list > div')).map(item => {
+        const name = item.querySelector('.lang-name')?.value || '';
+        const level = item.querySelector('.lang-level')?.value || '';
+        if (!name) return '';
+        return `<div class="cv-language-row"><span class="cv-lang-name">${esc(name)}</span> : ${esc(level)}</div>`;
+      }).join('');
+    } else if (type === 'reference') {
+      const ref = block.querySelector('#references')?.value || '';
+      if (ref) {
+          itemsHtml = `<p class="cv-ref">${esc(ref)}</p>`;
+      }
+    } else if (type === 'text') {
+      const txt = block.querySelector('textarea')?.value || '';
+      if (txt) {
+          const lines = txt.split('\\n').filter(l => l.trim() !== '');
+          itemsHtml = lines.map(line => `<p class="cv-paragraph">${esc(line)}</p>`).join('');
+      }
+    } else if (type === 'custom') {
+      itemsHtml = Array.from(block.querySelectorAll('.items-list > div')).map(item => {
+        const titleVal = item.querySelector('.cust-title')?.value || '';
+        const subtitle = item.querySelector('.cust-subtitle')?.value || '';
+        const date = item.querySelector('.cust-date')?.value || '';
+        const bullets = Array.from(item.querySelectorAll('.bullet-list input')).map(inp => inp.value).filter(v => v.trim());
+        if (!titleVal) return '';
+        return `<div class="cv-entry">
+          <div class="cv-entry-row"><span class="cv-entry-title">${esc(titleVal)}</span><span class="cv-entry-date">${esc(date)}</span></div>
+          ${subtitle ? `<div class="cv-entry-subtitle">${esc(subtitle)}</div>` : ''}
+          ${bullets.length ? `<ul class="cv-entry-bullets">${bullets.map(b => `<li>${esc(b)}</li>`).join('')}</ul>` : ''}
+        </div>`;
+      }).join('');
+    }
 
-  document.getElementById('cvLanguages').innerHTML = Array.from(
-    document.querySelectorAll('#languagesList > div')
-  ).map(item => {
-    const name = item.querySelector('.lang-name')?.value || '';
-    const level = item.querySelector('.lang-level')?.value || '';
-    if (!name) return '';
-    return `<div class="cv-language-row"><span class="cv-lang-name">${esc(name)}</span> : ${esc(level)}</div>`;
-  }).join('');
+    if (itemsHtml) {
+      sectionsArea.insertAdjacentHTML('beforeend', `
+        <div class="cv-section">
+            <h2 class="cv-section-title">${esc(title)}</h2>
+            ${itemsHtml}
+        </div>
+      `);
+    }
+  });
 
-  document.getElementById('cvReferences').textContent = document.getElementById('references').value || '';
 }
 
 function downloadPdf() {
@@ -377,6 +573,7 @@ function downloadPdf() {
   .cv-activity-bullets li { font-size: 10pt; margin-bottom: 1.5pt; line-height: 1.35; }
   .cv-skill-row { margin-bottom: 3pt; font-size: 10.5pt; line-height: 1.4; }
   .cv-language-row { margin-bottom: 2pt; font-size: 10.5pt; }
+  .cv-paragraph { margin-bottom: 4pt; font-size: 10.5pt; line-height: 1.4; color: #1a1a2e; }
   .cv-ref { font-size: 10pt; font-style: italic; color: #4a4a6a; }
 </style>
 </head>

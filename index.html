@@ -55,44 +55,102 @@
                         </div>
                         <div class="field-row">
                             <div class="field-col full">
-                                <label for="linkedin">LinkedIn</label>
-                                <input type="text" id="linkedin" class="input-field" />
+                                <label>Bağlantılar (LinkedIn, GitHub vb.)</label>
+                                <div id="socialLinksList"></div>
+                                <button type="button" id="addSocialLink" class="btn" style="margin-top:0.5rem;">+ Link Ekle</button>
                             </div>
                         </div>
                     </div>
-                    <div class="group-box">
-                        <div class="group-title">Eğitim</div>
-                        <div id="educationList"></div>
-                        <button type="button" id="addEducation" class="btn">Eğitim Ekle</button>
-                    </div>
-                    <div class="group-box">
-                        <div class="group-title">Deneyim</div>
-                        <div id="experienceList"></div>
-                        <button type="button" id="addExperience" class="btn">Deneyim Ekle</button>
-                    </div>
-                    <div class="group-box">
-                        <div class="group-title">Liderlik / Aktiviteler</div>
-                        <div id="activityList"></div>
-                        <button type="button" id="addActivity" class="btn">Aktivite Ekle</button>
-                    </div>
-                    <div class="group-box">
-                        <div class="group-title">Teknik Beceriler</div>
-                        <div id="skillsList"></div>
-                        <button type="button" id="addSkill" class="btn">Beceri Ekle</button>
-                    </div>
-                    <div class="group-box">
-                        <div class="group-title">Diller</div>
-                        <div id="languagesList"></div>
-                        <button type="button" id="addLanguage" class="btn">Dil Ekle</button>
-                    </div>
-                    <div class="group-box">
-                        <div class="group-title">Referanslar</div>
-                        <div class="field-row">
-                            <div class="field-col full">
-                                <textarea id="references" class="input-field" rows="2"></textarea>
+                    <div id="sectionsContainer">
+                        <div class="group-box section-block" data-type="education">
+                            <div class="section-header">
+                                <input type="text" class="section-title-input" value="Eğitim" />
+                                <div class="section-controls">
+                                    <button type="button" class="btn-icon btn-up" aria-label="Yukarı taşı">↑</button>
+                                    <button type="button" class="btn-icon btn-down" aria-label="Aşağı taşı">↓</button>
+                                    <button type="button" class="btn-icon btn-delete" aria-label="Kategoriyi sil">✕</button>
+                                </div>
+                            </div>
+                            <div class="section-content">
+                                <div id="educationList" class="items-list"></div>
+                                <button type="button" class="btn btn-add-item" data-action="addEducation">Eğitim Ekle</button>
+                            </div>
+                        </div>
+                        <div class="group-box section-block" data-type="experience">
+                            <div class="section-header">
+                                <input type="text" class="section-title-input" value="Deneyim" />
+                                <div class="section-controls">
+                                    <button type="button" class="btn-icon btn-up" aria-label="Yukarı taşı">↑</button>
+                                    <button type="button" class="btn-icon btn-down" aria-label="Aşağı taşı">↓</button>
+                                    <button type="button" class="btn-icon btn-delete" aria-label="Kategoriyi sil">✕</button>
+                                </div>
+                            </div>
+                            <div class="section-content">
+                                <div id="experienceList" class="items-list"></div>
+                                <button type="button" class="btn btn-add-item" data-action="addExperience">Deneyim Ekle</button>
+                            </div>
+                        </div>
+                        <div class="group-box section-block" data-type="activity">
+                            <div class="section-header">
+                                <input type="text" class="section-title-input" value="Liderlik / Aktiviteler" />
+                                <div class="section-controls">
+                                    <button type="button" class="btn-icon btn-up" aria-label="Yukarı taşı">↑</button>
+                                    <button type="button" class="btn-icon btn-down" aria-label="Aşağı taşı">↓</button>
+                                    <button type="button" class="btn-icon btn-delete" aria-label="Kategoriyi sil">✕</button>
+                                </div>
+                            </div>
+                            <div class="section-content">
+                                <div id="activityList" class="items-list"></div>
+                                <button type="button" class="btn btn-add-item" data-action="addActivity">Aktivite Ekle</button>
+                            </div>
+                        </div>
+                        <div class="group-box section-block" data-type="skill">
+                            <div class="section-header">
+                                <input type="text" class="section-title-input" value="Teknik Beceriler" />
+                                <div class="section-controls">
+                                    <button type="button" class="btn-icon btn-up" aria-label="Yukarı taşı">↑</button>
+                                    <button type="button" class="btn-icon btn-down" aria-label="Aşağı taşı">↓</button>
+                                    <button type="button" class="btn-icon btn-delete" aria-label="Kategoriyi sil">✕</button>
+                                </div>
+                            </div>
+                            <div class="section-content">
+                                <div id="skillsList" class="items-list"></div>
+                                <button type="button" class="btn btn-add-item" data-action="addSkill">Beceri Ekle</button>
+                            </div>
+                        </div>
+                        <div class="group-box section-block" data-type="language">
+                            <div class="section-header">
+                                <input type="text" class="section-title-input" value="Diller" />
+                                <div class="section-controls">
+                                    <button type="button" class="btn-icon btn-up" aria-label="Yukarı taşı">↑</button>
+                                    <button type="button" class="btn-icon btn-down" aria-label="Aşağı taşı">↓</button>
+                                    <button type="button" class="btn-icon btn-delete" aria-label="Kategoriyi sil">✕</button>
+                                </div>
+                            </div>
+                            <div class="section-content">
+                                <div id="languagesList" class="items-list"></div>
+                                <button type="button" class="btn btn-add-item" data-action="addLanguage">Dil Ekle</button>
+                            </div>
+                        </div>
+                        <div class="group-box section-block" data-type="reference">
+                            <div class="section-header">
+                                <input type="text" class="section-title-input" value="Referanslar" />
+                                <div class="section-controls">
+                                    <button type="button" class="btn-icon btn-up" aria-label="Yukarı taşı">↑</button>
+                                    <button type="button" class="btn-icon btn-down" aria-label="Aşağı taşı">↓</button>
+                                    <button type="button" class="btn-icon btn-delete" aria-label="Kategoriyi sil">✕</button>
+                                </div>
+                            </div>
+                            <div class="section-content">
+                                <div class="field-row">
+                                    <div class="field-col full">
+                                        <textarea id="references" class="input-field" rows="2"></textarea>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    <button type="button" id="addCustomSection" class="btn" style="width:100%; margin-top:1rem; border:2px dashed var(--border); background:transparent; color:var(--text); justify-content:center;">+ Yeni Kategori Ekle</button>
                 </div>
             </div>
         </aside>
@@ -117,42 +175,41 @@
                     <div class="cv-page" id="cvPage">
                         <div class="cv-header-block">
                             <h1 class="cv-name" id="cvName">Ahmet Yılmaz</h1>
-                            <div class="cv-contact-row" id="cvContact">
-                                <span id="cvPhone">+90 555 123 45 67</span>
-                                <span class="cv-sep">|</span>
-                                <span id="cvEmail">ahmet@example.com</span>
-                                <span class="cv-sep">|</span>
-                                <span id="cvLinkedin">linkedin.com/in/ahmetyilmaz</span>
-                            </div>
+                            <div class="cv-contact-row" id="cvContact"></div>
                         </div>
-                        <div class="cv-section">
-                            <h2 class="cv-section-title">Eğitim</h2>
-                            <div id="cvEducation"></div>
-                        </div>
-                        <div class="cv-section">
-                            <h2 class="cv-section-title">Deneyim</h2>
-                            <div id="cvExperience"></div>
-                        </div>
-                        <div class="cv-section">
-                            <h2 class="cv-section-title">Liderlik / Ekstra Aktiviteler</h2>
-                            <div id="cvActivities"></div>
-                        </div>
-                        <div class="cv-section">
-                            <h2 class="cv-section-title">Teknik Beceriler</h2>
-                            <div id="cvSkills"></div>
-                        </div>
-                        <div class="cv-section">
-                            <h2 class="cv-section-title">Diller</h2>
-                            <div id="cvLanguages"></div>
-                        </div>
-                        <div class="cv-section">
-                            <h2 class="cv-section-title">Referanslar</h2>
-                            <p id="cvReferences" class="cv-ref">Referanslar talep üzerine sağlanacaktır.</p>
-                        </div>
+                        <div id="cvSectionsArea"></div>
                     </div>
                 </div>
             </div>
         </main>
+        <dialog id="newCategoryModal" class="modal">
+            <div class="modal-content window" style="padding:0;">
+                <div class="title-bar">
+                    <div class="title-icon">
+                        <span>+</span> Kategori Ekle
+                    </div>
+                    <div class="title-bar-controls">
+                        <button class="btn title-bar-btn" id="closeCategoryModal">X</button>
+                    </div>
+                </div>
+                <div class="window-body">
+                    <div class="field-row">
+                        <div class="field-col full">
+                            <label>Şablon Seçin</label>
+                            <select id="newCategoryType" class="input-field" style="padding:6px;">
+                                <option value="custom">Özel Liste (Başlık, Alt Başlık, Tarih, Açıklama)</option>
+                                <option value="skill">Beceri Formatı (Kategori : İçerik)</option>
+                                <option value="language">Dil Formatı (Dil : Seviye)</option>
+                                <option value="text">Düz Metin (Paragraf)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="toolbar" style="justify-content:flex-end; margin-top:15px; margin-bottom:0;">
+                        <button type="button" id="confirmAddCategory" class="btn">Ekle</button>
+                    </div>
+                </div>
+            </div>
+        </dialog>
     </div>
     <script type="module" src="/main.js"></script>
 </body>

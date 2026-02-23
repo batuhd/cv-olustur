@@ -235,6 +235,78 @@ label {
     letter-spacing: 0.02em;
 }
 
+.section-header {
+    position: absolute;
+    top: -16px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--surface-light);
+    border: 1px solid var(--surface-darker);
+    box-shadow: inset 1px 1px 0 var(--surface-lighter), inset -1px -1px 0 var(--surface-dark);
+    padding: 2px 4px;
+}
+
+.section-title-input {
+    background: transparent;
+    border: 1px solid transparent;
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--title-blue);
+    letter-spacing: 0.02em;
+    padding: 2px 4px;
+    outline: none;
+    width: 60%;
+    min-width: 150px;
+}
+
+.section-title-input:focus {
+    background: var(--surface-lighter);
+    color: var(--text-main);
+    border: 1px solid var(--surface-darker);
+    box-shadow: inset 1px 1px 0 var(--surface-dark);
+}
+
+.section-controls {
+    display: flex;
+    gap: 2px;
+}
+
+.btn-icon {
+    width: 22px;
+    height: 22px;
+    padding: 0;
+    font-size: 14px;
+    line-height: 1;
+    background: var(--surface);
+    border-top: 2px solid var(--surface-light);
+    border-left: 2px solid var(--surface-light);
+    border-right: 2px solid var(--surface-darker);
+    border-bottom: 2px solid var(--surface-darker);
+    color: var(--text-main);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon:active {
+    border-top: 2px solid var(--surface-darker);
+    border-left: 2px solid var(--surface-darker);
+    border-right: 2px solid var(--surface-light);
+    border-bottom: 2px solid var(--surface-light);
+}
+
+.dynamic-link-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+    align-items: center;
+}
+
 .dynamic-item {
     border: 1px dashed var(--surface-dark);
     padding: 8px;
@@ -286,8 +358,8 @@ label {
 }
 
 .form-panel {
-    width: 480px;
-    min-width: 480px;
+    width: 500px;
+    min-width: 500px;
 }
 
 .preview-panel {
@@ -474,6 +546,31 @@ label {
 .cv-language-row {
     margin-bottom: 2pt;
     font-size: 10.5pt;
+}
+
+.cv-paragraph {
+    font-size: 10.5pt;
+    margin-bottom: 4pt;
+    line-height: 1.4;
+    color: #1a1a2e;
+}
+
+/* Modal Styles */
+.modal {
+    border: none;
+    background: transparent;
+    padding: 0;
+    margin: auto;
+}
+
+.modal::backdrop {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    width: 380px;
+    max-width: 90vw;
+    box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.5);
 }
 
 @page {
