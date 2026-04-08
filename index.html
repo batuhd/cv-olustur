@@ -26,15 +26,42 @@
                 </div>
             </div>
             <div class="window-body">
-                <div class="toolbar" style="display:flex;justify-content:space-between;">
-                    <button type="button" id="downloadPdf" class="btn">
-                        <span>💾</span> PDF İndir
-                    </button>
-                    <button type="button" id="clearForm" class="btn" style="color:#a00;">
-                        <span>🗑️</span> Tümünü Temizle
+                <!-- Clean Toolbar -->
+                <div class="main-toolbar">
+                    <div class="toolbar-group">
+                        <button type="button" id="exportJson" class="btn btn-secondary">
+                            <span>📤</span> Kaydet
+                        </button>
+                        <button type="button" id="importJson" class="btn btn-secondary">
+                            <span>📥</span> Yükle
+                        </button>
+                        <button type="button" id="loadExample" class="btn btn-secondary">
+                            <span>📋</span> Örnek
+                        </button>
+                        <input type="file" id="jsonFileInput" accept=".json" style="display:none;" />
+                    </div>
+                    <button type="button" id="clearForm" class="btn btn-danger">
+                        <span>🗑️</span> Temizle
                     </button>
                 </div>
+
                 <div class="inset-panel" style="flex:1;overflow-y:auto;">
+                    <!-- Template & Status Row -->
+                    <div class="settings-row">
+                        <div class="template-selector">
+                            <label>Şablon:</label>
+                            <select id="templateSelector">
+                                <option value="classic">Klasik</option>
+                                <option value="modern">Modern</option>
+                                <option value="minimal">Minimal</option>
+                                <option value="creative">Yaratıcı</option>
+                            </select>
+                        </div>
+                        <div class="save-status" id="saveStatus" title="Otomatik kayıt aktif">
+                            <span class="save-dot"></span>
+                        </div>
+                    </div>
+
                     <div class="group-box">
                         <div class="group-title">Kişisel Bilgiler</div>
                         <div class="field-row">
@@ -166,10 +193,15 @@
                 </div>
             </div>
             <div class="window-body" style="padding:0;overflow:hidden;">
-                <div class="toolbar" style="padding:6px;background:var(--surface);margin:0;">
-                    <button id="zoomOut" class="btn">-</button>
-                    <span id="zoomLevel" style="min-width:40px;text-align:center;display:inline-block;">100%</span>
-                    <button id="zoomIn" class="btn">+</button>
+                <div class="toolbar" style="padding:6px;background:var(--surface);margin:0;display:flex;justify-content:space-between;align-items:center;">
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <button id="zoomOut" class="btn">-</button>
+                        <span id="zoomLevel" style="min-width:40px;text-align:center;display:inline-block;">100%</span>
+                        <button id="zoomIn" class="btn">+</button>
+                    </div>
+                    <button type="button" id="downloadPdf" class="btn" style="font-weight:600;">
+                        <span>💾</span> PDF İndir
+                    </button>
                 </div>
                 <div class="cv-preview-area">
                     <div class="cv-page" id="cvPage">
@@ -190,30 +222,61 @@
             <span class="github-btn-text">Source Code</span>
         </a>
 
+        <!-- Category Modal -->
         <dialog id="newCategoryModal" class="modal">
             <div class="modal-content window" style="padding:0;">
                 <div class="title-bar">
                     <div class="title-icon">
-                        <span>+</span> Kategori Ekle
+                        <span>+</span> Yeni Bölüm Ekle
                     </div>
                     <div class="title-bar-controls">
                         <button class="btn title-bar-btn" id="closeCategoryModal">X</button>
                     </div>
                 </div>
-                <div class="window-body">
-                    <div class="field-row">
-                        <div class="field-col full">
-                            <label>Şablon Seçin</label>
-                            <select id="newCategoryType" class="input-field" style="padding:6px;">
-                                <option value="custom">Özel Liste (Başlık, Alt Başlık, Tarih, Açıklama)</option>
-                                <option value="skill">Beceri Formatı (Kategori : İçerik)</option>
-                                <option value="language">Dil Formatı (Dil : Seviye)</option>
-                                <option value="text">Düz Metin (Paragraf)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="toolbar" style="justify-content:flex-end; margin-top:15px; margin-bottom:0;">
-                        <button type="button" id="confirmAddCategory" class="btn">Ekle</button>
+                <div class="window-body category-modal-body">
+                    <p class="modal-description">CV'nize eklemek istediğiniz bölümü seçin:</p>
+                    
+                    <div class="category-grid">
+                        <button type="button" class="category-option" data-type="education">
+                            <span class="category-icon">🎓</span>
+                            <span class="category-label">Eğitim</span>
+                            <span class="category-desc">Okul, üniversite, sertifikalar</span>
+                        </button>
+                        <button type="button" class="category-option" data-type="experience">
+                            <span class="category-icon">💼</span>
+                            <span class="category-label">Deneyim</span>
+                            <span class="category-desc">İş deneyimi, stajlar</span>
+                        </button>
+                        <button type="button" class="category-option" data-type="activity">
+                            <span class="category-icon">⚡</span>
+                            <span class="category-label">Aktivite</span>
+                            <span class="category-desc">Kulüpler, projeler</span>
+                        </button>
+                        <button type="button" class="category-option" data-type="skill">
+                            <span class="category-icon">🛠️</span>
+                            <span class="category-label">Beceri</span>
+                            <span class="category-desc">Teknik yetenekler</span>
+                        </button>
+                        <button type="button" class="category-option" data-type="language">
+                            <span class="category-icon">🌍</span>
+                            <span class="category-label">Dil</span>
+                            <span class="category-desc">Yabancı diller</span>
+                        </button>
+                        <button type="button" class="category-option" data-type="reference">
+                            <span class="category-icon">👤</span>
+                            <span class="category-label">Referans</span>
+                            <span class="category-desc">Referans bilgileri</span>
+                        </button>
+                        <button type="button" class="category-option" data-type="custom">
+                            <span class="category-icon">📝</span>
+                            <span class="category-label">Özel Liste</span>
+                            <span class="category-desc">Başlık, tarih, açıklama</span>
+                        </button>
+                        <button type="button" class="category-option" data-type="text">
+                            <span class="category-icon">📄</span>
+                            <span class="category-label">Serbest Metin</span>
+                            <span class="category-desc">Paragraf formatında</span>
+                        </button>
                     </div>
                 </div>
             </div>

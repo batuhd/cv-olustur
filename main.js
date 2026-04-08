@@ -1,4 +1,5 @@
 import { animate, stagger } from 'animejs';
+import html2pdf from 'html2pdf.js';
 
 const defaultData = {
   fullName: 'Ahmet Yılmaz',
@@ -58,15 +59,83 @@ const defaultData = {
   references: 'Referanslar talep üzerine sağlanacaktır.'
 };
 
+const categoryTemplates = {
+  education: { title: 'Eğitim', btnText: 'Eğitim Ekle', action: 'addEducation' },
+  experience: { title: 'Deneyim', btnText: 'Deneyim Ekle', action: 'addExperience' },
+  activity: { title: 'Liderlik / Aktiviteler', btnText: 'Aktivite Ekle', action: 'addActivity' },
+  skill: { title: 'Beceriler', btnText: 'Beceri Ekle', action: 'addSkill' },
+  language: { title: 'Diller', btnText: 'Dil Ekle', action: 'addLanguage' },
+  reference: { title: 'Referanslar', btnText: null, action: null },
+  custom: { title: 'Yeni Bölüm', btnText: 'Eleman Ekle', action: 'addCustomItem' },
+  text: { title: 'Açıklama', btnText: null, action: null }
+};
+
 let currentZoom = 100;
+let currentTemplate = 'classic';
+let autoSaveTimeout = null;
+
+// Template styles
+const templateStyles = {
+  classic: {
+    fontFamily: "'Times New Roman', 'Noto Serif', serif",
+    headerAlign: 'center',
+    sectionStyle: 'uppercase-line',
+    color: '#1a1a2e',
+    fontSize: '10.5pt'
+  },
+  modern: {
+    fontFamily: "'Inter', 'Segoe UI', sans-serif",
+    headerAlign: 'left',
+    sectionStyle: 'bold-color',
+    color: '#2563eb',
+    fontSize: '10.5pt'
+  },
+  minimal: {
+    fontFamily: "'Inter', Arial, sans-serif",
+    headerAlign: 'left',
+    sectionStyle: 'simple',
+    color: '#333',
+    fontSize: '10pt'
+  },
+  creative: {
+    fontFamily: "'Georgia', serif",
+    headerAlign: 'center',
+    sectionStyle: 'boxed',
+    color: '#7c3aed',
+    fontSize: '11pt'
+  }
+};
 
 document.addEventListener('DOMContentLoaded', () => {
-  loadDefaults();
+  loadFromStorage();
   setupListeners();
   setupZoom();
+  setupAutoSave();
   updatePreview();
   playEntryAnimations();
 });
+
+function loadFromStorage() {
+  const saved = localStorage.getItem('cvData');
+  if (saved) {
+    try {
+      const data = JSON.parse(saved);
+      loadData(data);
+    } catch (e) {
+      console.error('Failed to load saved data:', e);
+      loadDefaults();
+    }
+  } else {
+    loadDefaults();
+  }
+  
+  // Load template preference
+  const savedTemplate = localStorage.getItem('cvTemplate');
+  if (savedTemplate) {
+    currentTemplate = savedTemplate;
+    document.getElementById('templateSelector').value = savedTemplate;
+  }
+}
 
 function loadDefaults() {
   document.getElementById('fullName').value = defaultData.fullName;
@@ -82,6 +151,234 @@ function loadDefaults() {
   defaultData.activities.forEach(act => addActivityItem(document.getElementById('activityList'), act));
   defaultData.skills.forEach(sk => addSkillItem(document.getElementById('skillsList'), sk));
   defaultData.languages.forEach(lang => addLanguageItem(document.getElementById('languagesList'), lang));
+}
+
+function loadData(data) {
+  // Clear existing
+  document.getElementById('socialLinksList').innerHTML = '';
+  document.querySelectorAll('.items-list').forEach(list => list.innerHTML = '');
+  document.getElementById('sectionsContainer').innerHTML = '';
+  
+  // Load personal info
+  document.getElementById('fullName').value = data.fullName || '';
+  document.getElementById('phone').value = data.phone || '';
+  document.getElementById('email').value = data.email || '';
+  
+  // Load social links
+  (data.links || []).forEach(l => addSocialLinkItem(l.name, l.url));
+  
+  // Load sections
+  (data.sections || []).forEach(section => {
+    addSectionFromData(section);
+  });
+}
+
+function addSectionFromData(sectionData) {
+  const type = sectionData.type;
+  const title = sectionData.title;
+  const items = sectionData.items || [];
+  const text = sectionData.text || '';
+  
+  const container = document.getElementById('sectionsContainer');
+  const sectionId = 'dynList_' + Date.now() + Math.random().toString(36).substr(2, 9);
+  const el = document.createElement('div');
+  el.className = 'group-box section-block';
+  el.setAttribute('data-type', type);
+  
+  const template = categoryTemplates[type] || categoryTemplates.custom;
+  let contentHtml = '';
+  
+  if (type === 'text') {
+    contentHtml = `<div class="field-row"><div class="field-col full"><textarea class="input-field dyn-textarea" rows="3" placeholder="Açıklamanızı buraya yazın...">${esc(text)}</textarea></div></div>`;
+  } else if (type === 'reference') {
+    contentHtml = `
+      <div class="field-row">
+        <div class="field-col full">
+          <textarea class="input-field dyn-textarea" rows="2">${esc(text)}</textarea>
+        </div>
+      </div>
+    `;
+  } else {
+    contentHtml = `<div id="${sectionId}" class="items-list"></div>`;
+    if (template.btnText) {
+      contentHtml += `<button type="button" class="btn btn-add-item" data-action="${template.action}">${template.btnText}</button>`;
+    }
+  }
+  
+  el.innerHTML = `
+    <div class="section-header">
+        <input type="text" class="section-title-input" value="${esc(title || template.title)}" />
+        <div class="section-controls">
+            <button type="button" class="btn-icon btn-up" aria-label="Yukarı taşı">↑</button>
+            <button type="button" class="btn-icon btn-down" aria-label="Aşağı taşı">↓</button>
+            <button type="button" class="btn-icon btn-delete" aria-label="Kategoriyi sil">✕</button>
+        </div>
+    </div>
+    <div class="section-content">
+        ${contentHtml}
+    </div>
+  `;
+  container.appendChild(el);
+  
+  // Load items
+  const listContainer = el.querySelector('.items-list');
+  if (listContainer) {
+    items.forEach(itemData => {
+      if (type === 'education') addEducationItem(listContainer, itemData);
+      else if (type === 'experience') addExperienceItem(listContainer, itemData);
+      else if (type === 'activity') addActivityItem(listContainer, itemData);
+      else if (type === 'skill') addSkillItem(listContainer, itemData);
+      else if (type === 'language') addLanguageItem(listContainer, itemData);
+      else if (type === 'custom') addCustomItem(listContainer, itemData);
+    });
+  }
+  
+  // Bind textarea if exists
+  const textarea = el.querySelector('textarea');
+  if (textarea) {
+    textarea.addEventListener('input', () => {
+      updatePreview();
+      scheduleAutoSave();
+    });
+  }
+}
+
+function collectData() {
+  const sections = [];
+  document.querySelectorAll('.section-block').forEach(block => {
+    const type = block.getAttribute('data-type');
+    const title = block.querySelector('.section-title-input').value;
+    const sectionData = { type, title };
+    
+    if (type === 'text' || type === 'reference') {
+      const textarea = block.querySelector('textarea');
+      sectionData.text = textarea ? textarea.value : '';
+    } else {
+      sectionData.items = [];
+      block.querySelectorAll('.items-list > div').forEach(item => {
+        const inputs = item.querySelectorAll('input');
+        const itemData = {};
+        
+        if (type === 'education') {
+          itemData.school = item.querySelector('.ed-school')?.value || '';
+          itemData.degree = item.querySelector('.ed-degree')?.value || '';
+          itemData.date = item.querySelector('.ed-date')?.value || '';
+        } else if (type === 'experience') {
+          itemData.title = item.querySelector('.exp-title')?.value || '';
+          itemData.company = item.querySelector('.exp-company')?.value || '';
+          itemData.location = item.querySelector('.exp-location')?.value || '';
+          itemData.date = item.querySelector('.exp-date')?.value || '';
+          itemData.bullets = Array.from(item.querySelectorAll('.bullet-list input')).map(inp => inp.value);
+        } else if (type === 'activity') {
+          itemData.name = item.querySelector('.act-name')?.value || '';
+          itemData.role = item.querySelector('.act-role')?.value || '';
+          itemData.org = item.querySelector('.act-org')?.value || '';
+          itemData.bullets = Array.from(item.querySelectorAll('.bullet-list input')).map(inp => inp.value);
+        } else if (type === 'skill') {
+          itemData.category = item.querySelector('.skill-cat')?.value || '';
+          itemData.value = item.querySelector('.skill-val')?.value || '';
+        } else if (type === 'language') {
+          itemData.name = item.querySelector('.lang-name')?.value || '';
+          itemData.level = item.querySelector('.lang-level')?.value || '';
+        } else if (type === 'custom') {
+          itemData.title = item.querySelector('.cust-title')?.value || '';
+          itemData.subtitle = item.querySelector('.cust-subtitle')?.value || '';
+          itemData.date = item.querySelector('.cust-date')?.value || '';
+          itemData.bullets = Array.from(item.querySelectorAll('.bullet-list input')).map(inp => inp.value);
+        }
+        
+        sectionData.items.push(itemData);
+      });
+    }
+    
+    sections.push(sectionData);
+  });
+  
+  const links = Array.from(document.querySelectorAll('.dynamic-link-row')).map(row => ({
+    name: row.querySelector('.link-name').value.trim(),
+    url: row.querySelector('.link-url').value.trim()
+  })).filter(l => l.name || l.url);
+  
+  return {
+    fullName: document.getElementById('fullName').value,
+    phone: document.getElementById('phone').value,
+    email: document.getElementById('email').value,
+    links,
+    sections,
+    template: currentTemplate
+  };
+}
+
+function saveToStorage() {
+  const data = collectData();
+  localStorage.setItem('cvData', JSON.stringify(data));
+  localStorage.setItem('cvTemplate', currentTemplate);
+  showSaveStatus();
+}
+
+function scheduleAutoSave() {
+  if (autoSaveTimeout) {
+    clearTimeout(autoSaveTimeout);
+  }
+  autoSaveTimeout = setTimeout(() => {
+    saveToStorage();
+  }, 2000);
+}
+
+function showSaveStatus() {
+  const dot = document.querySelector('.save-dot');
+  if (dot) {
+    dot.classList.add('saved');
+    setTimeout(() => {
+      dot.classList.remove('saved');
+    }, 1500);
+  }
+}
+
+function setupAutoSave() {
+  // Listen to all input changes
+  document.addEventListener('input', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+      scheduleAutoSave();
+    }
+  });
+}
+
+function exportToJson() {
+  const data = collectData();
+  const jsonStr = JSON.stringify(data, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cv-${data.fullName.replace(/\s+/g, '-').toLowerCase() || 'data'}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function importFromJson(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      loadData(data);
+      updatePreview();
+      saveToStorage();
+      
+      if (data.template) {
+        currentTemplate = data.template;
+        document.getElementById('templateSelector').value = data.template;
+      }
+      
+      animate('.form-panel', { translateX: [-20, 0], opacity: [0.8, 1], duration: 300, ease: 'outCubic' });
+    } catch (err) {
+      alert('Geçersiz JSON dosyası: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
 }
 
 function playEntryAnimations() {
@@ -109,7 +406,15 @@ function animateRemoveItem(el) {
 function createDynamicItem() {
   const el = document.createElement('div');
   el.className = 'dynamic-item';
-  el.innerHTML = `<div class="item-header"><button type="button" class="btn-remove">X Sil</button></div>`;
+  el.innerHTML = `
+    <div class="item-header">
+      <div class="item-controls">
+        <button type="button" class="btn-icon btn-item-up" title="Yukarı taşı">↑</button>
+        <button type="button" class="btn-icon btn-item-down" title="Aşağı taşı">↓</button>
+        <button type="button" class="btn-icon btn-item-delete" title="Sil">🗑️</button>
+      </div>
+    </div>
+  `;
   return el;
 }
 
@@ -135,8 +440,15 @@ function addSocialLinkItem(name = '', url = '') {
   container.appendChild(div);
   
   const inputs = div.querySelectorAll('input');
-  inputs.forEach(inp => inp.addEventListener('input', updatePreview));
-  div.querySelector('.btn-remove-bullet').addEventListener('click', () => { div.remove(); updatePreview(); });
+  inputs.forEach(inp => inp.addEventListener('input', () => {
+    updatePreview();
+    scheduleAutoSave();
+  }));
+  div.querySelector('.btn-remove-bullet').addEventListener('click', () => { 
+    div.remove(); 
+    updatePreview();
+    scheduleAutoSave();
+  });
 }
 
 function addEducationItem(container, data = {}) {
@@ -253,29 +565,29 @@ function addNewSectionOfType(type) {
   el.className = 'group-box section-block';
   el.setAttribute('data-type', type);
   
-  let btnLabel = '';
-  let addAction = '';
+  const template = categoryTemplates[type] || categoryTemplates.custom;
   let contentHtml = '';
 
-  if (type === 'custom') {
-    btnLabel = 'Eleman Ekle';
-    addAction = 'addCustomItem';
-    contentHtml = `<div id="${sectionId}" class="items-list"></div><button type="button" class="btn btn-add-item" data-action="${addAction}">${btnLabel}</button>`;
-  } else if (type === 'skill') {
-    btnLabel = 'Beceri Ekle';
-    addAction = 'addSkill';
-    contentHtml = `<div id="${sectionId}" class="items-list"></div><button type="button" class="btn btn-add-item" data-action="${addAction}">${btnLabel}</button>`;
-  } else if (type === 'language') {
-    btnLabel = 'Dil Ekle';
-    addAction = 'addLanguage';
-    contentHtml = `<div id="${sectionId}" class="items-list"></div><button type="button" class="btn btn-add-item" data-action="${addAction}">${btnLabel}</button>`;
-  } else if (type === 'text') {
+  if (type === 'text') {
     contentHtml = `<div class="field-row"><div class="field-col full"><textarea class="input-field dyn-textarea" rows="3" placeholder="Açıklamanızı buraya yazın..."></textarea></div></div>`;
+  } else if (type === 'reference') {
+    contentHtml = `
+      <div class="field-row">
+        <div class="field-col full">
+          <textarea class="input-field dyn-textarea" rows="2" placeholder="Referans bilgilerinizi buraya yazın..."></textarea>
+        </div>
+      </div>
+    `;
+  } else {
+    contentHtml = `<div id="${sectionId}" class="items-list"></div>`;
+    if (template.btnText) {
+      contentHtml += `<button type="button" class="btn btn-add-item" data-action="${template.action}">${template.btnText}</button>`;
+    }
   }
 
   el.innerHTML = `
     <div class="section-header">
-        <input type="text" class="section-title-input" value="Yeni Kategori" />
+        <input type="text" class="section-title-input" value="${template.title}" />
         <div class="section-controls">
             <button type="button" class="btn-icon btn-up" aria-label="Yukarı taşı">↑</button>
             <button type="button" class="btn-icon btn-down" aria-label="Aşağı taşı">↓</button>
@@ -288,7 +600,17 @@ function addNewSectionOfType(type) {
   `;
   container.appendChild(el);
   
+  // Bind textarea events
+  const textarea = el.querySelector('textarea');
+  if (textarea) {
+    textarea.addEventListener('input', () => {
+      updatePreview();
+      scheduleAutoSave();
+    });
+  }
+  
   animate(el, { translateY: [15, 0], opacity: [0, 1], duration: 400, ease: 'outCubic' });
+  scheduleAutoSave();
 }
 
 function addBulletInput(bulletList, value = '') {
@@ -302,26 +624,76 @@ function addBulletInput(bulletList, value = '') {
   `;
   bulletList.appendChild(div);
   const inp = div.querySelector('input');
-  inp.addEventListener('input', updatePreview);
-  div.querySelector('.btn-remove-bullet').addEventListener('click', () => { div.remove(); updatePreview(); });
+  inp.addEventListener('input', () => {
+    updatePreview();
+    scheduleAutoSave();
+  });
+  div.querySelector('.btn-remove-bullet').addEventListener('click', () => { 
+    div.remove(); 
+    updatePreview();
+    scheduleAutoSave();
+  });
   if (!value) inp.focus();
 }
 
 function bindItem(el) {
-  el.querySelectorAll('input, textarea').forEach(inp => inp.addEventListener('input', updatePreview));
-  const removeBtn = el.querySelector('.btn-remove');
-  if (removeBtn) {
-    removeBtn.addEventListener('click', async () => { await animateRemoveItem(el); updatePreview(); });
+  el.querySelectorAll('input, textarea').forEach(inp => inp.addEventListener('input', () => {
+    updatePreview();
+    scheduleAutoSave();
+  }));
+  
+  // Item kontrol butonları (yukarı/aşağı/sil)
+  const upBtn = el.querySelector('.btn-item-up');
+  const downBtn = el.querySelector('.btn-item-down');
+  const deleteBtn = el.querySelector('.btn-item-delete');
+  
+  if (upBtn) {
+    upBtn.addEventListener('click', () => {
+      const prev = el.previousElementSibling;
+      if (prev && prev.classList.contains('dynamic-item')) {
+        el.parentNode.insertBefore(el, prev);
+        updatePreview();
+        scheduleAutoSave();
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  }
+  
+  if (downBtn) {
+    downBtn.addEventListener('click', () => {
+      const next = el.nextElementSibling;
+      if (next && next.classList.contains('dynamic-item')) {
+        el.parentNode.insertBefore(next, el);
+        updatePreview();
+        scheduleAutoSave();
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  }
+  
+  if (deleteBtn) {
+    deleteBtn.addEventListener('click', async () => { 
+      await animateRemoveItem(el); 
+      updatePreview();
+      scheduleAutoSave();
+    });
   }
 }
 
 function setupListeners() {
-  ['fullName', 'phone', 'email', 'references'].forEach(id => {
+  ['fullName', 'phone', 'email'].forEach(id => {
     const el = document.getElementById(id);
-    if(el) el.addEventListener('input', updatePreview);
+    if(el) el.addEventListener('input', () => {
+      updatePreview();
+      scheduleAutoSave();
+    });
   });
 
-  document.getElementById('addSocialLink').addEventListener('click', () => { addSocialLinkItem(); updatePreview(); });
+  document.getElementById('addSocialLink').addEventListener('click', () => { 
+    addSocialLinkItem(); 
+    updatePreview();
+    scheduleAutoSave();
+  });
 
   // Event delegation for dynamically added add buttons
   document.addEventListener('click', (e) => {
@@ -335,6 +707,7 @@ function setupListeners() {
       else if (action === 'addLanguage') addLanguageItem(listContainer);
       else if (action === 'addCustomItem') addCustomItem(listContainer);
       updatePreview();
+      scheduleAutoSave();
     }
   });
 
@@ -345,6 +718,7 @@ function setupListeners() {
       if (section.previousElementSibling) {
         section.parentNode.insertBefore(section, section.previousElementSibling);
         updatePreview();
+        scheduleAutoSave();
         section.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     } else if (e.target.classList.contains('btn-down')) {
@@ -352,12 +726,14 @@ function setupListeners() {
       if (section.nextElementSibling) {
         section.parentNode.insertBefore(section.nextElementSibling, section);
         updatePreview();
+        scheduleAutoSave();
         section.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     } else if (e.target.classList.contains('btn-delete')) {
       if (confirm('Bu kategoriyi silmek istediğinize emin misiniz?')) {
         e.target.closest('.section-block').remove();
         updatePreview();
+        scheduleAutoSave();
       }
     }
   });
@@ -365,9 +741,11 @@ function setupListeners() {
   document.getElementById('sectionsContainer').addEventListener('input', (e) => {
     if (e.target.classList.contains('section-title-input')) {
       updatePreview();
+      scheduleAutoSave();
     }
   });
 
+  // New category modal
   document.getElementById('addCustomSection').addEventListener('click', () => { 
     document.getElementById('newCategoryModal').showModal();
   });
@@ -376,27 +754,121 @@ function setupListeners() {
     document.getElementById('newCategoryModal').close();
   });
 
-  document.getElementById('confirmAddCategory').addEventListener('click', () => {
-    const type = document.getElementById('newCategoryType').value;
-    addNewSectionOfType(type);
-    document.getElementById('newCategoryModal').close();
-    updatePreview();
+  // Category options click
+  document.querySelectorAll('.category-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.getAttribute('data-type');
+      addNewSectionOfType(type);
+      document.getElementById('newCategoryModal').close();
+      updatePreview();
+    });
+  });
+
+  // Close modal on backdrop click
+  document.getElementById('newCategoryModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('newCategoryModal')) {
+      document.getElementById('newCategoryModal').close();
+    }
   });
 
   document.getElementById('downloadPdf').addEventListener('click', downloadPdf);
   document.getElementById('clearForm').addEventListener('click', clearForm);
+  document.getElementById('loadExample').addEventListener('click', loadExampleCv);
+  
+  // JSON Export/Import
+  document.getElementById('exportJson').addEventListener('click', exportToJson);
+  document.getElementById('importJson').addEventListener('click', () => {
+    document.getElementById('jsonFileInput').click();
+  });
+  document.getElementById('jsonFileInput').addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+      importFromJson(e.target.files[0]);
+      e.target.value = '';
+    }
+  });
+  
+  // Template selector
+  document.getElementById('templateSelector').addEventListener('change', (e) => {
+    currentTemplate = e.target.value;
+    localStorage.setItem('cvTemplate', currentTemplate);
+    updatePreview();
+  });
 }
 
 function clearForm() {
   if (!confirm('Tüm bilgileri silmek istediğinize emin misiniz?')) return;
-  ['fullName', 'phone', 'email', 'references'].forEach(id => { 
+  ['fullName', 'phone', 'email'].forEach(id => { 
       const el = document.getElementById(id);
       if(el) el.value = ''; 
   });
   document.getElementById('socialLinksList').innerHTML = '';
   document.querySelectorAll('.items-list').forEach(list => { list.innerHTML = ''; });
   document.querySelectorAll('.dyn-textarea').forEach(ta => { ta.value = ''; });
+  document.getElementById('sectionsContainer').innerHTML = '';
   updatePreview();
+  saveToStorage();
+}
+
+function loadExampleCv() {
+  if (!confirm('Örnek CV verileri yüklenecek. Mevcut verileriniz silinecek. Devam etmek istiyor musunuz?')) return;
+  
+  // Clear existing
+  document.getElementById('socialLinksList').innerHTML = '';
+  document.getElementById('sectionsContainer').innerHTML = '';
+  
+  // Load example data
+  document.getElementById('fullName').value = defaultData.fullName;
+  document.getElementById('phone').value = defaultData.phone;
+  document.getElementById('email').value = defaultData.email;
+  
+  // Add default sections
+  addNewSectionOfType('education');
+  addNewSectionOfType('experience');
+  addNewSectionOfType('activity');
+  addNewSectionOfType('skill');
+  addNewSectionOfType('language');
+  addNewSectionOfType('reference');
+  
+  // Add example items to sections
+  const educationList = document.querySelector('[data-type="education"] .items-list');
+  if (educationList) {
+    defaultData.education.forEach(ed => addEducationItem(educationList, ed));
+  }
+  
+  const experienceList = document.querySelector('[data-type="experience"] .items-list');
+  if (experienceList) {
+    defaultData.experience.forEach(exp => addExperienceItem(experienceList, exp));
+  }
+  
+  const activityList = document.querySelector('[data-type="activity"] .items-list');
+  if (activityList) {
+    defaultData.activities.forEach(act => addActivityItem(activityList, act));
+  }
+  
+  const skillsList = document.querySelector('[data-type="skill"] .items-list');
+  if (skillsList) {
+    defaultData.skills.forEach(sk => addSkillItem(skillsList, sk));
+  }
+  
+  const languagesList = document.querySelector('[data-type="language"] .items-list');
+  if (languagesList) {
+    defaultData.languages.forEach(lang => addLanguageItem(languagesList, lang));
+  }
+  
+  const referenceBlock = document.querySelector('[data-type="reference"]');
+  if (referenceBlock) {
+    const textarea = referenceBlock.querySelector('textarea');
+    if (textarea) textarea.value = defaultData.references;
+  }
+  
+  // Add social links
+  defaultData.links.forEach(l => addSocialLinkItem(l.name, l.url));
+  
+  updatePreview();
+  saveToStorage();
+  
+  // Show success animation
+  animate('.form-panel', { translateX: [-10, 0], opacity: [0.9, 1], duration: 300, ease: 'outCubic' });
 }
 
 function setupZoom() {
@@ -409,8 +881,36 @@ function applyZoom() {
   document.getElementById('cvPage').style.transform = `scale(${currentZoom / 100})`;
 }
 
+function applyTemplateStyles() {
+  const cvPage = document.getElementById('cvPage');
+  const style = templateStyles[currentTemplate];
+  
+  // Remove existing template classes
+  cvPage.classList.remove('template-classic', 'template-modern', 'template-minimal', 'template-creative');
+  cvPage.classList.add(`template-${currentTemplate}`);
+  
+  // Apply CSS variables for the template
+  cvPage.style.setProperty('--cv-font', style.fontFamily);
+  cvPage.style.setProperty('--cv-color', style.color);
+  cvPage.style.setProperty('--cv-font-size', style.fontSize);
+  
+  // Apply header alignment
+  const headerBlock = cvPage.querySelector('.cv-header-block');
+  if (headerBlock) {
+    headerBlock.style.textAlign = style.headerAlign;
+  }
+  
+  // Apply section style
+  const sections = cvPage.querySelectorAll('.cv-section-title');
+  sections.forEach(section => {
+    section.classList.remove('style-uppercase-line', 'style-bold-color', 'style-simple', 'style-boxed');
+    section.classList.add(`style-${style.sectionStyle}`);
+  });
+}
+
 function updatePreview() {
-  document.getElementById('cvName').textContent = document.getElementById('fullName').value || 'Ad Soyad';
+  const fullName = document.getElementById('fullName').value;
+  document.getElementById('cvName').textContent = fullName || 'Ad Soyad';
   
   // Contact update
   const phone = document.getElementById('phone').value;
@@ -497,12 +997,14 @@ function updatePreview() {
         return `<div class="cv-language-row"><span class="cv-lang-name">${esc(name)}</span> : ${esc(level)}</div>`;
       }).join('');
     } else if (type === 'reference') {
-      const ref = block.querySelector('#references')?.value || '';
+      const textarea = block.querySelector('textarea');
+      const ref = textarea ? textarea.value : '';
       if (ref) {
           itemsHtml = `<p class="cv-ref">${esc(ref)}</p>`;
       }
     } else if (type === 'text') {
-      const txt = block.querySelector('textarea')?.value || '';
+      const textarea = block.querySelector('textarea');
+      const txt = textarea ? textarea.value : '';
       if (txt) {
           const lines = txt.split('\\n').filter(l => l.trim() !== '');
           itemsHtml = lines.map(line => `<p class="cv-paragraph">${esc(line)}</p>`).join('');
@@ -531,62 +1033,50 @@ function updatePreview() {
       `);
     }
   });
-
+  
+  // Apply template styles
+  applyTemplateStyles();
 }
 
 function downloadPdf() {
-  const cvContent = document.getElementById('cvPage').innerHTML;
-  const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:0;height:0;border:none;';
-  document.body.appendChild(iframe);
-
-  const doc = iframe.contentDocument || iframe.contentWindow.document;
-  doc.open();
-  doc.write(`<!DOCTYPE html>
-<html lang="tr">
-<head>
-<meta charset="UTF-8">
-<title> </title>
-<style>
-  @page { size: A4; margin: 0; }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Times New Roman', serif; color: #1a1a2e; font-size: 10.5pt; line-height: 1.45; background: white; word-break: break-word; overflow-wrap: break-word; padding: 15mm 18mm; }
-  .cv-name { font-family: 'Times New Roman', serif; font-size: 20pt; font-weight: 700; letter-spacing: 0.02em; color: #1a1a2e; }
-  .cv-contact-row { display: flex; justify-content: center; align-items: center; gap: 8pt; flex-wrap: wrap; font-size: 9.5pt; color: #4a4a6a; }
-  .cv-sep { color: #999; }
-  .cv-header-block { text-align: center; margin-bottom: 14pt; padding-bottom: 10pt; border-bottom: 1.5pt solid #1a1a2e; }
-  .cv-section { margin-bottom: 10pt; }
-  .cv-section-title { font-family: 'Times New Roman', serif; font-size: 11.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding-bottom: 2pt; margin-bottom: 6pt; border-bottom: 1pt solid #1a1a2e; color: #1a1a2e; }
-  .cv-entry { margin-bottom: 7pt; }
-  .cv-entry-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1pt; }
-  .cv-entry-title { font-weight: 600; font-size: 10.5pt; }
-  .cv-entry-date { font-size: 9.5pt; color: #4a4a6a; white-space: nowrap; }
-  .cv-entry-subtitle { font-size: 9.5pt; color: #4a4a6a; font-style: italic; margin-bottom: 2pt; }
-  .cv-entry-bullets { list-style: disc; padding-left: 16pt; margin-top: 2pt; }
-  .cv-entry-bullets li { font-size: 10pt; margin-bottom: 1.5pt; line-height: 1.35; }
-  .cv-activity { margin-bottom: 5pt; }
-  .cv-activity-row { display: flex; justify-content: space-between; align-items: baseline; }
-  .cv-activity-name { font-weight: 600; font-size: 10.5pt; }
-  .cv-activity-role { font-size: 9.5pt; color: #4a4a6a; font-style: italic; }
-  .cv-activity-org { font-size: 9.5pt; color: #4a4a6a; }
-  .cv-activity-bullets { list-style: disc; padding-left: 16pt; margin-top: 2pt; }
-  .cv-activity-bullets li { font-size: 10pt; margin-bottom: 1.5pt; line-height: 1.35; }
-  .cv-skill-row { margin-bottom: 3pt; font-size: 10.5pt; line-height: 1.4; }
-  .cv-language-row { margin-bottom: 2pt; font-size: 10.5pt; }
-  .cv-paragraph { margin-bottom: 4pt; font-size: 10.5pt; line-height: 1.4; color: #1a1a2e; }
-  .cv-ref { font-size: 10pt; font-style: italic; color: #4a4a6a; }
-</style>
-</head>
-<body>${cvContent}</body>
-</html>`);
-  doc.close();
-
-  iframe.contentWindow.addEventListener('afterprint', () => { setTimeout(() => iframe.remove(), 500); });
-  setTimeout(() => {
-    iframe.contentWindow.focus();
-    iframe.contentWindow.print();
-    setTimeout(() => { if (iframe.parentNode) iframe.remove(); }, 5000);
-  }, 500);
+  const element = document.getElementById('cvPage');
+  const fullName = document.getElementById('fullName').value || 'CV';
+  
+  const opt = {
+    margin: 0,
+    filename: `${fullName.replace(/\s+/g, '_')}_CV.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { 
+      scale: 2,
+      useCORS: true,
+      letterRendering: true
+    },
+    jsPDF: { 
+      unit: 'mm', 
+      format: 'a4', 
+      orientation: 'portrait'
+    },
+    pagebreak: {
+      mode: ['css', 'legacy'],
+      avoid: '.cv-section'
+    }
+  };
+  
+  // Show loading indicator
+  const btn = document.getElementById('downloadPdf');
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '<span>⏳</span> Hazırlanıyor...';
+  btn.disabled = true;
+  
+  html2pdf().set(opt).from(element).save().then(() => {
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+  }).catch(err => {
+    console.error('PDF generation error:', err);
+    btn.innerHTML = originalText;
+    btn.disabled = false;
+    alert('PDF oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
+  });
 }
 
 function esc(str) {
