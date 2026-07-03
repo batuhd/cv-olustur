@@ -1,60 +1,99 @@
 import { animate, stagger } from 'animejs';
-import html2pdf from 'html2pdf.js';
+import { jsPDF } from 'jspdf';
+import { timesFonts } from './fonts/timesFonts.js';
 
 const defaultData = {
-  fullName: 'Ahmet Yılmaz',
-  phone: '+90 555 123 45 67',
-  email: 'ahmet@example.com',
+  fullName: 'Muhammed Batuhan DEDE',
+  phone: '',
+  email: 'batuhdede@gmail.com',
   links: [
-    { name: 'LinkedIn', url: 'linkedin.com/in/ahmetyilmaz' },
-    { name: 'GitHub', url: 'github.com/ahmetyilmaz' }
+    { name: 'LinkedIn', url: 'linkedin.com/in/batuhdede' },
+    { name: 'GitHub', url: 'github.com/batuhd' },
+    { name: 'Websitem', url: 'www.batuhdede.me' }
   ],
   education: [
-    { school: 'Örnek Üniversitesi', degree: 'Lisans, Bilgisayar Mühendisliği', date: 'Eylül 2021 - Haziran 2025' }
+    { school: 'Altınbaş Üniversitesi', degree: 'Lisans - Yönetim Biliişm Sistemleri', date: 'Eylül 2025 - Devam ediyor' },
+    { school: 'Alibeyköy Mesleki ve Teknik Anadolu Lisesi', degree: 'Lise - Bilgi Teknolojisi / Yazılım Geliştirme Bölümü', date: '2020 - 2024' }
   ],
   experience: [
     {
-      title: 'Stajyer, Yazılım Geliştirme',
-      company: 'ABC Teknoloji A.Ş.',
-      location: 'İstanbul, Türkiye',
-      date: '2023 – 2024',
+      title: 'Kalite Komisyonu Öğrenci Üyesi',
+      company: 'Kalite Ve Akreditasyon Ofisi -',
+      location: 'Altınbaş Üniversitesi',
+      date: 'Nisan 2026 - Devam ediyor',
       bullets: [
-        'Web uygulamalarının geliştirilmesine katkıda bulundu.',
-        'Backend API entegrasyonları üzerinde çalıştı.'
+        'YÖKAK Ulusal Akreditasyon Denetimleri: Üniversitenin Yükseköğretim Kalite Kurulu (YÖKAK) ulusal akreditasyon ve kurumsal değerlendirme süreçlerinde tüm öğrenci kitlesini resmi dış denetçilere karşı temsil etmek.',
+        'Üst Düzey Karar Alma & Temsiliyet: Rektörlük ve akademik yönetimin yer aldığı Kalite Komisyonu toplantılarına katılarak, üniversitenin stratejik kalite güvencesi politikalarında öğrenci perspektifiyle söz sahibi olmak.',
+        'Kalite Güvencesi & Süreç Optimizasyonu: Öğrenci geri bildirimlerini sistematik raporlara dönüştürerek eğitim-öğretim ve idari altyapı süreçlerinin iyileştirilmesine yönelik proaktif çözümler geliştirmek.'
+      ]
+    },
+    {
+      title: 'Etkinlik Müdürlüğü - Etkinlik Operasyon Asistanı',
+      company: 'Altınbaş Üniversiesi',
+      location: '',
+      date: 'Eyl 2025 - Devam ediyor',
+      bullets: [
+        'Büyük Çaplı Operasyon Yönetimi: 11 ayda bakanlık düzeyinde protokol ağırlanan açılışlar, kariyer zirveleri ve festivallerden oluşan 60+ dev etkinliğin sahne arkası koordinasyonunda kilit rol oynamak.',
+        'Teknik Altyapı & Prodüksiyon: Ses, ışık ve dijital görüntü sistemlerinin kurulumunu üstlenmek; fotoğraf/video dokümantasyonu ile görsel içerik üretmek.',
+        'Kriz Çözümü & Takım Çalışması: Canlı etkinliklerdeki olası teknik darboğazlara karşı anlık çözümler üreterek takım halinde operasyonel mükemmelliği sağlamak.'
       ]
     },
     {
       title: 'Freelance Web Geliştirici',
-      company: 'Bireysel / Uzaktan',
+      company: 'Remote / Uzaktan',
       location: '',
-      date: '2021 – Günümüz',
+      date: '2021 - 2025',
       bullets: [
-        'Küçük işletmelere özel web siteleri tasarlayıp geliştirdi.',
-        'HTML, CSS, JavaScript ve modern framework\'lerle mobil uyumlu arayüzler oluşturdu.',
-        'Alan adı, hosting ve SEO süreçlerini yönetti.'
+        'Uçtan Uca (End-to-End) Proje Yönetimi: Bireysel müşteriler ve KOBİ\'ler için ihtiyaç analizinden canlıya alım sürecine kadar modern, kullanıcı dostu ve %100 mobil uyumlu (responsive) web siteleri tasarlayıp geliştirmek.',
+        'Teknik SEO & Performans Optimizasyonu: İşletmelerin dijital görünürlüğünü artırmak amacıyla arama motoru optimizasyonlarını (SEO) kurgulamak ve organik trafik artışı sağlayacak teknik iyileştirmeleri gerçekleştirmek.',
+        'Dijital Altyapı & Müşteri İlişkileri: 5 yıl boyunca serbest zamanlı (freelance) portföyü yöneterek; alan adı (domain) kaydı, sunucu (hosting) yapılandırması ve periyodik teknik bakım operasyonlarını kesintisiz olarak yürütmek.'
+      ]
+    },
+    {
+      title: 'Bilgi İşlem (IT) Stajyeri',
+      company: 'Gayrettepe Sosyal Bilimler Yerleşkesi - ',
+      location: 'Altınbaş Üniversitesi',
+      date: 'Eyl 2023 - Haz 2024',
+      bullets: [
+        'Sistem Yönetimi & Merkezi Dağıtım (WDS): Active Directory (IAM) üzerinden kimlik/yetki yönetimini ve Office 365 altyapısını koordine etmek; WDS (Windows Deployment Services) ile cihaz imajlarını merkezi olarak dağıtarak donanım kurulum operasyonlarında hız ve standardizasyon sağlamak.',
+        'Uçtan Uca BT Desteği & İş Sürekliliği (Help Desk): Kampüs genelindeki akademik ve idari personelin donanım, yazılım ve ağ sorunlarına proaktif çözümler üreterek üniversitenin eğitim-araştırma faaliyetlerinin kesintisiz (zero-downtime) ilerlemesini güvence altına almak.',
+        'Otomasyon & Veri Odaklı Süreç İyileştirme: BT destek taleplerini (ticket) analiz ederek hizmet kalitesini artıracak raporlar oluşturmak; operasyonel iş yükünü hafifletmek amacıyla kodlama becerilerini kullanarak rutin IT görevleri için otomasyon çözümleri geliştirmek.'
       ]
     }
   ],
   activities: [
-    { name: 'Yazılım Kulübü', role: 'Başkan Yardımcısı', org: 'Örnek Üniversitesi', bullets: [] },
     {
-      name: 'Açık Kaynak Katkıları',
-      role: 'Bağımsız',
-      org: '',
+      name: 'Altınbaş Üniversitesi - Kulüpler Birliği',
+      role: 'Haziran 2026',
+      org: 'Yönetim kurulu Başkanı',
+      bullets: []
+    },
+    {
+      name: 'Altınbaş Üniversitesi - Yapay zeka Ve Robotik Kulübü',
+      role: 'Aralık 2025 - Devam ediyor',
+      org: 'Yönetim kurulu Başkanı',
       bullets: [
-        'Çeşitli açık kaynak projelerine katkıda bulundu.',
-        'Yerelleştirme ve çeviri çalışmaları yürüttü.'
+        'Stratejik Liderlik & İş Birlikleri: Yönetim kurulu üyeliğinden başkanlığa uzanan süreçte, Riva Labs ve Sui Türkiye gibi sektör paydaşlarıyla iş birlikleri kurarak teknoloji ekosistemini kampüse taşımak.',
+        'Teknik Etkinlik Yönetimi: Web3, Move dili, dApp entegrasyonu (Sui & Move Bootcamp) ve veri analizi (Excel Sertifika Programı) gibi yüzlerce öğrenciye hitap eden uygulamalı (hands-on) eğitimler ve atölyeler organize etmek.',
+        'Ölçeklenebilir Proje Geliştirme: Kulüp ekosistemi ve "Elmalı Yönetim" projesi kapsamında Next.js kullanarak büyük ölçekli, sürdürülebilir ve modern yazılım mimarisine sahip web projeleri geliştirmek.'
       ]
+    },
+    {
+      name: 'Altınbaş Üniversitesi - Veri Bilimi Kulübü',
+      role: 'Eylül 2025 - Aralık 2025',
+      org: 'Yönetim Kurulu Başkan Yardımcısı',
+      bullets: []
     }
   ],
   skills: [
-    { category: 'Programlama Dilleri', value: 'Python, JavaScript, Java, C++' },
-    { category: 'Veritabanı', value: 'MySQL, PostgreSQL, MongoDB' },
-    { category: 'Araçlar', value: 'Git, VS Code, Docker, Figma' }
+    { category: 'Tasarım & Modern Web', value: 'TypeScript, React & Next.js, UI/UX Design (Figma), Adobe Creative Suite (Ps Ai Pr Ae), Tailwind CSS' },
+    { category: 'Yönetim & Sistem Yönetimi', value: 'Kalite Güvencesi (YÖKAK), Stratejik Raporlama, Teknik Etkinlik Operasyonları, Bilgi İşlem (IT) Teknik Destek' },
+    { category: 'Kurumsal Operasyon & Altyapı', value: 'Active Directory, WDS, Office 365 Yönetimi, SQL ve Firebase, Python, REST API\'leri' }
   ],
   languages: [
     { name: 'Türkçe', level: 'Anadili' },
-    { name: 'İngilizce', level: 'B2' }
+    { name: 'İngilizce', level: 'C1 - İleri' },
+    { name: 'Almanca', level: 'A2 - Temel' }
   ],
   references: 'Referanslar talep üzerine sağlanacaktır.'
 };
@@ -89,20 +128,6 @@ const templateStyles = {
     sectionStyle: 'bold-color',
     color: '#2563eb',
     fontSize: '10.5pt'
-  },
-  minimal: {
-    fontFamily: "'Inter', Arial, sans-serif",
-    headerAlign: 'left',
-    sectionStyle: 'simple',
-    color: '#333',
-    fontSize: '10pt'
-  },
-  creative: {
-    fontFamily: "'Georgia', serif",
-    headerAlign: 'center',
-    sectionStyle: 'boxed',
-    color: '#7c3aed',
-    fontSize: '11pt'
   }
 };
 
@@ -131,9 +156,12 @@ function loadFromStorage() {
   
   // Load template preference
   const savedTemplate = localStorage.getItem('cvTemplate');
-  if (savedTemplate) {
+  if (savedTemplate && templateStyles[savedTemplate]) {
     currentTemplate = savedTemplate;
     document.getElementById('templateSelector').value = savedTemplate;
+  } else {
+    currentTemplate = 'classic';
+    document.getElementById('templateSelector').value = 'classic';
   }
 }
 
@@ -368,9 +396,12 @@ function importFromJson(file) {
       updatePreview();
       saveToStorage();
       
-      if (data.template) {
+      if (data.template && templateStyles[data.template]) {
         currentTemplate = data.template;
         document.getElementById('templateSelector').value = data.template;
+      } else if (data.template) {
+        currentTemplate = 'classic';
+        document.getElementById('templateSelector').value = 'classic';
       }
       
       animate('.form-panel', { translateX: [-20, 0], opacity: [0.8, 1], duration: 300, ease: 'outCubic' });
@@ -493,8 +524,8 @@ function addActivityItem(container, data = {}) {
   el.insertAdjacentHTML('beforeend', `
     <div class="field-row">
       ${makeField('act-name', 'Aktivite Adı', data.name, 2)}
-      ${makeField('act-role', 'Görev', data.role, 1)}
-      ${makeField('act-org', 'Kurum', data.org || '', 1)}
+      ${makeField('act-role', 'Tarih', data.role, 1)}
+      ${makeField('act-org', 'Görev', data.org || '', 1)}
     </div>
     <div style="margin-top:0.5rem;">
       <label style="display:block;margin-bottom:2px;font-weight:500;">Açıklamalar</label>
@@ -924,9 +955,12 @@ function updatePreview() {
 
   const contactItems = [];
   if (phone) contactItems.push(`<span>${esc(phone)}</span>`);
-  if (email) contactItems.push(`<span>${esc(email)}</span>`);
+  if (email) contactItems.push(`<a href="mailto:${esc(email)}" class="cv-link">${esc(email)}</a>`);
   links.forEach(l => {
-    if (l.url) contactItems.push(`<span>${esc(l.url)}</span>`);
+    if (l.url) {
+      const href = normalizeUrl(l.url);
+      contactItems.push(`<a href="${esc(href)}" target="_blank" class="cv-link">${esc(l.url)}</a>`);
+    }
   });
 
   document.getElementById('cvContact').innerHTML = contactItems.join('<span class="cv-sep">|</span>');
@@ -1038,45 +1072,394 @@ function updatePreview() {
   applyTemplateStyles();
 }
 
+function normalizeUrl(url) {
+  if (!url) return '';
+  url = url.trim();
+  if (/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(url)) return url;
+  if (url.includes('@') && !url.includes('/')) return `mailto:${url}`;
+  return `https://${url}`;
+}
+
 function downloadPdf() {
-  const element = document.getElementById('cvPage');
-  const fullName = document.getElementById('fullName').value || 'CV';
-  
-  const opt = {
-    margin: 0,
-    filename: `${fullName.replace(/\s+/g, '_')}_CV.pdf`,
-    image: { type: 'jpeg', quality: 0.98 },
-    html2canvas: { 
-      scale: 2,
-      useCORS: true,
-      letterRendering: true
-    },
-    jsPDF: { 
-      unit: 'mm', 
-      format: 'a4', 
-      orientation: 'portrait'
-    },
-    pagebreak: {
-      mode: ['css', 'legacy'],
-      avoid: '.cv-section'
-    }
-  };
-  
-  // Show loading indicator
   const btn = document.getElementById('downloadPdf');
   const originalText = btn.innerHTML;
   btn.innerHTML = '<span>⏳</span> Hazırlanıyor...';
   btn.disabled = true;
-  
-  html2pdf().set(opt).from(element).save().then(() => {
-    btn.innerHTML = originalText;
-    btn.disabled = false;
-  }).catch(err => {
+
+  try {
+    const data = collectData();
+    const fileName = `${(data.fullName || 'CV').replace(/\s+/g, '_')}_CV.pdf`;
+    const pdf = new jsPDF('p', 'mm', 'a4');
+
+    // Register Times New Roman fonts
+    pdf.addFileToVFS('TimesNewRoman-Regular.ttf', timesFonts.regular);
+    pdf.addFileToVFS('TimesNewRoman-Bold.ttf', timesFonts.bold);
+    pdf.addFont('TimesNewRoman-Regular.ttf', 'TimesNewRoman', 'normal');
+    pdf.addFont('TimesNewRoman-Bold.ttf', 'TimesNewRoman', 'bold');
+
+    const style = templateStyles[currentTemplate] || templateStyles.classic;
+    const accentColor = style.color;
+    const textColor = '#000000';
+    const subColor = '#333333';
+
+    const pageW = 210;
+    const margin = 18;
+    const contentW = pageW - margin * 2;
+    let y = margin;
+
+    const ptToMm = (pt) => pt * 0.352778;
+
+    const setStyle = (size, weight, color = textColor) => {
+      pdf.setFont('TimesNewRoman', weight);
+      pdf.setFontSize(size);
+      pdf.setTextColor(color);
+    };
+
+    const addText = (text, x, yy, options = {}) => {
+      if (!text) return yy;
+      const maxW = options.maxWidth || contentW;
+      const lines = pdf.splitTextToSize(text, maxW);
+      pdf.text(lines, x, yy, options);
+      return yy + lines.length * ptToMm(pdf.getFontSize()) * (options.lineHeight || 1.25);
+    };
+
+    const checkPageBreak = (height) => {
+      if (y + height > 297 - margin) {
+        pdf.addPage();
+        y = margin;
+        return true;
+      }
+      return false;
+    };
+
+    // Place a label on the right side of the current line if it fits,
+    // otherwise wrap it below the current line, right aligned.
+    // Returns the extra vertical space added.
+    const placeRightOrWrap = (label, yy, currentSize = 9.5, bold = true) => {
+      if (!label) {
+        if (bold) setStyle(currentSize, 'bold', textColor);
+        return 0;
+      }
+      const labelW = pdf.getTextWidth(label);
+      if (labelW <= contentW) {
+        pdf.text(label, pageW - margin - labelW, yy);
+        if (bold) setStyle(currentSize, 'bold', textColor);
+        return 0;
+      }
+      // Label too wide: wrap below the current line, right aligned
+      setStyle(8.5, 'normal', subColor);
+      const wrapped = pdf.splitTextToSize(label, contentW);
+      const lineH = ptToMm(8.5) * 1.2;
+      const wrappedH = wrapped.length * lineH;
+      const firstLineW = pdf.getTextWidth(wrapped[0]);
+      pdf.text(wrapped, pageW - margin - firstLineW, yy + 3.4);
+      if (bold) setStyle(currentSize, 'bold', textColor);
+      return wrappedH + 1.5;
+    };
+
+    // Estimate how much vertical space a short section needs, so we can keep it whole.
+    const estimateSectionHeight = (section) => {
+      let h = 11; // title + underline + spacing
+      if (section.type === 'text' || section.type === 'reference') {
+        const lines = (section.text || '').split('\n').filter(l => l.trim());
+        h += lines.length * 5.5 + 2;
+      } else if (section.type === 'skill' || section.type === 'language') {
+        const items = (section.items || []).filter(i => i.category || i.value || i.name);
+        setStyle(10, 'normal', textColor);
+        items.forEach(item => {
+          const text = section.type === 'skill'
+            ? `${item.category}: ${item.value}`
+            : `${item.name}: ${item.level}`;
+          const lines = pdf.splitTextToSize(text, contentW);
+          h += lines.length * 4.2 + 1;
+        });
+      } else if (section.type === 'education') {
+        const items = (section.items || []).filter(i => i.school || i.degree);
+        items.forEach(item => {
+          h += 6; // school + date
+          if (item.degree) {
+            setStyle(9.5, 'normal', subColor);
+            const degLines = pdf.splitTextToSize(item.degree, contentW);
+            h += degLines.length * 3.8 + 1.5;
+          }
+          h += 2;
+        });
+      } else if (section.type === 'experience' || section.type === 'custom' || section.type === 'activity') {
+        const items = (section.items || []).filter(i => i.title || i.name);
+        items.forEach(item => {
+          h += 6; // title/name line
+          if (section.type === 'activity') {
+            if (item.role) h += 4.2; // date on the right
+            if (item.org) {
+              setStyle(9.5, 'normal', subColor);
+              const orgLines = pdf.splitTextToSize(item.org, contentW);
+              h += orgLines.length * 3.8 + 1;
+            }
+          } else {
+            const subtitle = [item.company, item.location, item.subtitle].filter(Boolean).join(' / ');
+            if (subtitle) {
+              setStyle(9.5, 'normal', subColor);
+              const subLines = pdf.splitTextToSize(subtitle, contentW);
+              h += subLines.length * 3.8 + 1.5;
+            }
+          }
+          (item.bullets || []).forEach(b => {
+            if (!b.trim()) return;
+            setStyle(9.5, 'normal', textColor);
+            const bulletLines = pdf.splitTextToSize('• ' + b.trim(), contentW - 5);
+            h += bulletLines.length * 4.0;
+          });
+          h += 3;
+        });
+      }
+      return h;
+    };
+
+    // Header
+    setStyle(18, 'bold', textColor);
+    const headerAlign = style.headerAlign || 'center';
+    const nameText = data.fullName || 'Ad Soyad';
+    const nameW = pdf.getTextWidth(nameText);
+    const nameX = headerAlign === 'center' ? (pageW - nameW) / 2 : margin;
+    pdf.text(nameText, nameX, y);
+    y += 8;
+
+    // Contact row
+    const contactParts = [];
+    if (data.phone) contactParts.push(data.phone);
+    if (data.email) contactParts.push(data.email);
+    data.links.forEach(l => { if (l.url) contactParts.push(l.url); });
+
+    if (contactParts.length) {
+      setStyle(9, 'normal', subColor);
+      const contactText = contactParts.join('  |  ');
+      const contactLines = pdf.splitTextToSize(contactText, contentW);
+      const firstLineW = pdf.getTextWidth(contactLines[0]);
+      const contactX = headerAlign === 'center' ? (pageW - firstLineW) / 2 : margin;
+      pdf.text(contactLines, contactX, y);
+      const contactH = contactLines.length * ptToMm(9) * 1.25;
+      y += contactH + 2;
+
+      // Add clickable links
+      let linkX = contactX;
+      const lineY = y - contactH - 1.5;
+      contactParts.forEach((part, idx) => {
+        const partW = pdf.getTextWidth(part);
+        if (linkX + partW > contactX + contentW) return;
+        const href = idx === 0 && data.phone ? `tel:${data.phone}` :
+                     idx === (data.phone ? 1 : 0) && data.email ? `mailto:${data.email}` :
+                     normalizeUrl(part);
+        pdf.link(linkX, lineY - 2.5, partW, 3.5, { url: href });
+        const sep = '  |  ';
+        if (idx < contactParts.length - 1) linkX += partW + pdf.getTextWidth(sep);
+      });
+    }
+
+    // Header line
+    pdf.setDrawColor(accentColor);
+    pdf.setLineWidth(0.5);
+    const lineX = headerAlign === 'center' ? margin + contentW * 0.1 : margin;
+    const lineW = headerAlign === 'center' ? contentW * 0.8 : contentW;
+    pdf.line(lineX, y, lineX + lineW, y);
+    y += 8;
+
+    const sectionStyle = style.sectionStyle || 'uppercase-line';
+
+    const renderSectionTitle = (title) => {
+      checkPageBreak(10);
+      const titleText = sectionStyle === 'uppercase-line' ? title.toUpperCase() : title;
+      setStyle(11, 'bold', sectionStyle === 'boxed' ? '#ffffff' : accentColor);
+
+      if (sectionStyle === 'boxed') {
+        const titleW = pdf.getTextWidth(titleText);
+        pdf.setFillColor(accentColor);
+        pdf.rect(margin, y - 3.4, titleW + 4, 5.4, 'F');
+        pdf.text(titleText, margin + 2, y);
+        y += 5.5;
+      } else if (sectionStyle === 'bold-color') {
+        pdf.text(titleText, margin, y);
+        y += 1.8;
+        pdf.setDrawColor(accentColor);
+        pdf.setLineWidth(0.6);
+        pdf.line(margin, y, pageW - margin, y);
+        y += 4.5;
+      } else if (sectionStyle === 'simple') {
+        pdf.text(titleText, margin, y);
+        y += 1.8;
+        pdf.setDrawColor('#999999');
+        pdf.setLineWidth(0.3);
+        pdf.setLineDashPattern([1, 1], 0);
+        pdf.line(margin, y, pageW - margin, y);
+        pdf.setLineDashPattern([], 0);
+        y += 4.5;
+      } else {
+        // uppercase-line default
+        pdf.text(titleText, margin, y);
+        y += 1.8;
+        pdf.setDrawColor(accentColor);
+        pdf.setLineWidth(0.4);
+        pdf.line(margin, y, pageW - margin, y);
+        y += 4.5;
+      }
+    };
+
+    const renderSection = (title, renderContent, estimatedH = 0) => {
+      // If the whole section is short, keep it on one page
+      if (estimatedH > 0 && estimatedH < 90) {
+        checkPageBreak(estimatedH);
+      }
+      renderSectionTitle(title);
+      renderContent();
+      y += 4.5;
+    };
+
+    data.sections.forEach(section => {
+      const estimatedH = estimateSectionHeight(section);
+
+      if (section.type === 'text') {
+        if (!section.text) return;
+        renderSection(section.title, () => {
+          setStyle(10, 'normal', textColor);
+          const paragraphs = section.text.split('\n').filter(l => l.trim());
+          paragraphs.forEach(p => {
+            checkPageBreak(10);
+            y = addText(p, margin, y, { maxWidth: contentW, lineHeight: 1.3 });
+            y += 2.5;
+          });
+        }, estimatedH);
+      } else if (section.type === 'reference') {
+        if (!section.text) return;
+        renderSection(section.title, () => {
+          setStyle(10, 'normal', subColor);
+          y = addText(section.text, margin, y, { maxWidth: contentW, lineHeight: 1.25 });
+        }, estimatedH);
+      } else if (section.type === 'education') {
+        const items = (section.items || []).filter(i => i.school || i.degree);
+        if (!items.length) return;
+        renderSection(section.title, () => {
+          items.forEach(item => {
+            checkPageBreak(13);
+            setStyle(10.5, 'bold', textColor);
+            const school = item.school || '';
+            pdf.text(school, margin, y);
+            const extra = placeRightOrWrap(item.date, y, 10.5);
+            y += 5 + extra;
+            if (item.degree) {
+              setStyle(9.5, 'normal', subColor);
+              y = addText(item.degree, margin, y, { maxWidth: contentW, lineHeight: 1.25 });
+              y += 1.5;
+            }
+            y += 2;
+          });
+        }, estimatedH);
+      } else if (section.type === 'experience' || section.type === 'custom') {
+        const items = (section.items || []).filter(i => i.title || i.company || i.name);
+        if (!items.length) return;
+        renderSection(section.title, () => {
+          items.forEach(item => {
+            const titleVal = item.title || item.name || '';
+            const subtitle = [item.company, item.location, item.subtitle].filter(Boolean).join(' / ');
+            const bullets = item.bullets || [];
+            checkPageBreak(13);
+
+            setStyle(10.5, 'bold', textColor);
+            pdf.text(titleVal, margin, y);
+            const extra = placeRightOrWrap(item.date, y, 10.5);
+            y += 5 + extra;
+
+            if (subtitle) {
+              setStyle(9.5, 'normal', subColor);
+              y = addText(subtitle, margin, y, { maxWidth: contentW, lineHeight: 1.25 });
+              y += 1.5;
+            }
+
+            if (bullets.length) {
+              setStyle(9.5, 'normal', textColor);
+              bullets.forEach(b => {
+                if (!b.trim()) return;
+                const bulletText = '• ' + b.trim();
+                const lines = pdf.splitTextToSize(bulletText, contentW - 5);
+                checkPageBreak(lines.length * 4.0 + 1);
+                pdf.text(lines, margin + 2.5, y, { maxWidth: contentW - 5 });
+                y += lines.length * 4.0;
+              });
+            }
+            y += 3;
+          });
+        }, estimatedH);
+      } else if (section.type === 'activity') {
+        const items = (section.items || []).filter(i => i.name);
+        if (!items.length) return;
+        renderSection(section.title, () => {
+          items.forEach(item => {
+            const bullets = item.bullets || [];
+            checkPageBreak(13);
+
+            // Name (position) on left, role (date) on right
+            setStyle(10.5, 'bold', textColor);
+            const name = item.name || '';
+            pdf.text(name, margin, y);
+            const dateExtra = placeRightOrWrap(item.role, y, 10.5);
+            y += 5 + dateExtra;
+
+            // Org below on the left
+            if (item.org) {
+              setStyle(9.5, 'normal', subColor);
+              y = addText(item.org, margin, y, { maxWidth: contentW, lineHeight: 1.25 });
+              y += 1;
+            }
+
+            if (bullets.length) {
+              setStyle(9.5, 'normal', textColor);
+              bullets.forEach(b => {
+                if (!b.trim()) return;
+                const bulletText = '• ' + b.trim();
+                const lines = pdf.splitTextToSize(bulletText, contentW - 5);
+                checkPageBreak(lines.length * 4.0 + 1);
+                pdf.text(lines, margin + 2.5, y, { maxWidth: contentW - 5 });
+                y += lines.length * 4.0;
+              });
+            }
+            y += 3;
+          });
+        }, estimatedH);
+      } else if (section.type === 'skill') {
+        const items = (section.items || []).filter(i => i.category || i.value);
+        if (!items.length) return;
+        renderSection(section.title, () => {
+          setStyle(10, 'normal', textColor);
+          items.forEach(item => {
+            const text = `${item.category}: ${item.value}`;
+            const lines = pdf.splitTextToSize(text, contentW);
+            checkPageBreak(lines.length * 4.2 + 1);
+            pdf.text(lines, margin, y);
+            y += lines.length * 4.2;
+          });
+        }, estimatedH);
+      } else if (section.type === 'language') {
+        const items = (section.items || []).filter(i => i.name);
+        if (!items.length) return;
+        renderSection(section.title, () => {
+          setStyle(10, 'normal', textColor);
+          items.forEach(item => {
+            const text = `${item.name}: ${item.level}`;
+            const lines = pdf.splitTextToSize(text, contentW);
+            checkPageBreak(lines.length * 4.2 + 1);
+            pdf.text(lines, margin, y);
+            y += lines.length * 4.2;
+          });
+        }, estimatedH);
+      }
+    });
+
+    pdf.save(fileName);
+  } catch (err) {
     console.error('PDF generation error:', err);
+    alert('PDF oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
+  } finally {
     btn.innerHTML = originalText;
     btn.disabled = false;
-    alert('PDF oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.');
-  });
+  }
 }
 
 function esc(str) {
